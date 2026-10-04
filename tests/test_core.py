@@ -1,4 +1,4 @@
-"""Coverage helpers for core / dotenv / banner / path."""
+"""Coverage helpers for core / banner / path."""
 
 from __future__ import annotations
 
@@ -7,7 +7,6 @@ from pathlib import Path
 import pytest
 
 from walla.cli.banner import print_banner
-from walla.core.dotenv import credentials_configured, load_credentials, load_dotenv_files
 from walla.core.errors import classify_error
 from walla.core.exceptions import (
     WallaAmbiguousError,
@@ -18,22 +17,6 @@ from walla.core.exceptions import (
 from walla.core.path import config_dir, profile_path
 from walla.http.polite import reset_polite
 from walla.hunter.profile_store import parse_intake
-
-
-def test_dotenv_and_credentials(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("WALLAPOP_USER", raising=False)
-    monkeypatch.delenv("WALLAPOP_PW", raising=False)
-    monkeypatch.delenv("WALLAPOP_EMAIL", raising=False)
-    monkeypatch.delenv("WALLAPOP_PASSWORD", raising=False)
-    env = tmp_path / ".env"
-    env.write_text("WALLAPOP_USER=a@b.c\nWALLAPOP_PW=hidden\n", encoding="utf-8")
-    monkeypatch.chdir(tmp_path)
-    monkeypatch.setenv("WALLA_CONFIG_DIR", str(tmp_path / "cfg"))
-    load_dotenv_files()
-    user, pw = load_credentials()
-    assert user == "a@b.c"
-    assert pw == "hidden"
-    assert credentials_configured() is True
 
 
 def test_classify_types() -> None:

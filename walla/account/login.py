@@ -1,4 +1,4 @@
-"""Login: password attempt + NextAuth cookie mint."""
+"""Login: cookie paste (primary) + optional password."""
 
 from __future__ import annotations
 
@@ -8,15 +8,16 @@ from typing import Any, cast
 
 from curl_cffi import requests
 
-from walla.account.cookies import SESSION_COOKIE, parse_cookie_export
+from walla.account.cookies import SESSION_COOKIE, parse_cookie_export, parse_cookie_text
 from walla.account.session_store import load_session, save_session
-from walla.core.dotenv import load_credentials
 from walla.core.exceptions import WallaAuthError, WallaHTTPError
 from walla.http.headers import WEB_BASE, default_headers, new_device_id
 from walla.http.polite import wait_turn
 from walla.models.account import SessionData
 
 __all__ = (
+    "ensure_access_token",
+    "login_cookie_text",
     "login_cookies",
     "login_password",
     "mint_access_token",
@@ -25,22 +26,62 @@ __all__ = (
 )
 
 
-def login_password(*, username: str | None = None, password: str | None = None) -> SessionData:
-    """Try ``POST /api/v3/access/login``. Raises ``WallaAuthError`` on MFA/empty 400."""
-    user, pw = load_credentials()
-    user = username or user
-    pw = password or pw
-    if not user or not pw:
+def login_cookie_text(text: str) -> SessionData:
+    """Primary path: pasted cookie value, Cookie header, or export body."""
+    stripped = text.strip()
+    if _looks_like_cookie_file_path(stripped):
+        return login_cookies(Path(stripped).expanduser())
+    cookie, device = parse_cookie_text(stripped)
+    return _session_from_cookie(cookie, device)
+
+
+def _looks_like_cookie_file_path(text: str) -> bool:
+    """True only for short path-like pastes; never treat JWT blobs as paths."""
+    if "\n" in text or len(text) > 512:
+        return False
+    if text.count(".") >= 2 and len(text) > 80 and "/" not in text and "\\" not in text:
+        return False
+    if SESSION_COOKIE in text or text.startswith("eyJ") or ':"' in text:
+        return False
+    path = Path(text).expanduser()
+    try:
+        return path.is_file()
+    except OSError:
+        return False
+
+
+def login_cookies(path: Path) -> SessionData:
+    target = path.expanduser()
+    if not target.is_file():
         raise WallaAuthError(
-            "WALLAPOP_USER / WALLAPOP_PW not set. Put them in .env or pass credentials."
+            f"cookies file not found: {target}. "
+            "In Cookie-Editor on es.wallapop.com: Export -> save the file, "
+            "then: walla login --cookies /path/to/that/file.txt"
         )
+    cookie, device = parse_cookie_export(target)
+    return _session_from_cookie(cookie, device)
+
+
+def _session_from_cookie(cookie: str, device: str | None) -> SessionData:
+    session = SessionData(session_cookie=cookie, device_id=device or new_device_id())
+    token, exp = mint_access_token(session)
+    session.access_token = token
+    session.expires_at = exp
+    save_session(session)
+    return session
+
+
+def login_password(*, username: str, password: str) -> SessionData:
+    """Optional fallback. Often fails on MFA; prefer cookie paste."""
+    if not username or not password:
+        raise WallaAuthError("email and password required")
     device = new_device_id()
     wait_turn()
     headers = default_headers(device_id=device)
     headers["Content-Type"] = "application/json"
     resp = requests.post(
         "https://api.wallapop.com/api/v3/access/login",
-        json={"username": user, "password": pw},
+        json={"username": username, "password": password},
         headers=headers,
         impersonate="chrome",
         timeout=30,
@@ -48,7 +89,7 @@ def login_password(*, username: str | None = None, password: str | None = None) 
     if resp.status_code != 200 or not resp.content:
         raise WallaAuthError(
             f"Password login failed (HTTP {resp.status_code}). "
-            "Likely MFA / Keycloak. Export cookies instead."
+            "Paste the session cookie instead: walla login"
         )
     body = cast(Any, resp.json())  # type: ignore[no-untyped-call]
     data = body.get("data") if isinstance(body, dict) else body
@@ -60,24 +101,13 @@ def login_password(*, username: str | None = None, password: str | None = None) 
     )
     refresh = token_block.get("refresh_token") or token_block.get("refreshToken")
     if not access:
-        raise WallaAuthError("Password login returned no access token. Export cookies.")
+        raise WallaAuthError("Password login returned no access token. Use walla login.")
     session = SessionData(
         access_token=str(access),
         refresh_token=str(refresh) if refresh else None,
         device_id=device,
         expires_at=time.time() + 300,
     )
-    save_session(session)
-    return session
-
-
-def login_cookies(path: Path) -> SessionData:
-    cookie, device = parse_cookie_export(path)
-    device = device or new_device_id()
-    session = SessionData(session_cookie=cookie, device_id=device)
-    token, exp = mint_access_token(session)
-    session.access_token = token
-    session.expires_at = exp
     save_session(session)
     return session
 
@@ -102,8 +132,13 @@ def mint_access_token(session: SessionData) -> tuple[str, float]:
     data = cast(Any, resp.json()) if resp.content else {}  # type: ignore[no-untyped-call]
     token = data.get("token") if isinstance(data, dict) else None
     if not token:
-        raise WallaAuthError("Stored session is no longer valid. Re-export cookies.")
-    # Rotate cookie if Set-Cookie present
+        raise WallaAuthError(
+            "Wallapop rejected this cookie (empty session). "
+            "Open a logged-in es.wallapop.com tab, copy a FRESH "
+            f"{SESSION_COOKIE} Value, then: walla login "
+            "(or walla login --cookies cookies.txt). "
+            "Do not paste the cookie into chat."
+        )
     for ck in resp.cookies.jar if hasattr(resp.cookies, "jar") else []:
         if getattr(ck, "name", None) == SESSION_COOKIE and ck.value:
             session.session_cookie = ck.value
@@ -153,14 +188,7 @@ def refresh_session(session: SessionData | None = None) -> SessionData:
 def ensure_access_token() -> SessionData:
     sess = load_session()
     if sess is None:
-        # try password from env
-        try:
-            return login_password()
-        except WallaAuthError:
-            raise WallaAuthError(
-                "No session. Set WALLAPOP_USER/WALLAPOP_PW and run walla login, "
-                "or walla login --cookies <file>."
-            ) from None
+        raise WallaAuthError("No session. Run: walla login")
     if sess.expires_at and sess.expires_at > time.time() + 30 and sess.access_token:
         return sess
     return refresh_session(sess)
@@ -181,7 +209,6 @@ def whoami(*, client_data: dict[str, Any] | None = None) -> dict[str, Any]:
         timeout=30,
     )
     if resp.status_code == 404:
-        # fallback minimal
         return {
             "user_id": sess.user_id,
             "micro_name": sess.micro_name,

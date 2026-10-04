@@ -21,14 +21,15 @@ pytest -q -m "not live"
 ## Calling walla from an agent
 
 ```bash
-pipx install -e '.[mcp]'
+pipx install 'walla-cli[mcp]'   # PyPI preferred
 walla instruct --json
 walla setup --lat 41.39 --lon 2.17 --km 30 --label Barcelona --json
-walla login --json          # WALLAPOP_USER / WALLAPOP_PW from .env
+walla login --cookie '<session-token>' --json
 walla search "tabla" --json
 ```
 
-Never print passwords or bearer tokens. On `error_type: auth`, follow `human_fix`.
+Never print session cookies or bearer tokens. On `error_type: auth`, ask the human
+to run `walla login` and paste `__Secure-next-auth.session-token`.
 
 ## Architecture map
 
@@ -36,7 +37,7 @@ Never print passwords or bearer tokens. On `error_type: auth`, follow `human_fix
 |------|------|----------|
 | `walla/models/` | Pydantic DTOs | I/O |
 | `walla/http/` | curl_cffi, polite | CLI/MCP imports |
-| `walla/core/` | Envelope, errors, paths, dotenv | Live Wallapop calls (except doctor via CLI) |
+| `walla/core/` | Envelope, errors, paths, human_fix | Live Wallapop calls (except doctor via CLI) |
 | `walla/search/` | Public look | Account mutations |
 | `walla/account/` | Session, inbox, say, offer, fav | HTML scrape |
 | `walla/hunter/` | Profile, watches, GRAB/LOOK/PASS | HTTP |
@@ -57,5 +58,6 @@ Ranks: models 10 → exceptions 15 → http 20 → core 30 → search/account/hu
 - **Do** keep files <= 250 LOC.
 - **Do** fail closed; typed `error_type`.
 - **Do** require `--yes` for say/offer.
-- **Don't** commit `.env`, session.json, cookies, or tokens.
+- **Don't** commit session.json, cookies, or tokens.
 - **Don't** invent wire shapes without a fixture.
+- **Don't** require `.env` credentials; login is cookie paste.

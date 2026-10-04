@@ -1,7 +1,7 @@
 [project]
-name = "walla"
-version = "0.1.0"
-description = "Wallapop.es CLI — look · offer · talk for humans and agents"
+name = "walla-cli"
+version = "0.1.4"
+description = "Wallapop.es CLI - look · offer · talk for humans and agents"
 authors = [{ name = "Dr. Berend Gort", email = "berend.gort@gmail.com" }]
 readme = "README.md"
 license = { text = "MIT" }
@@ -39,7 +39,7 @@ dev = [
     "ruff>=0.8.4",
 ]
 all = [
-    "walla[mcp,dev]",
+    "walla-cli[mcp,dev]",
 ]
 
 [project.scripts]

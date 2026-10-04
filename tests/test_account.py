@@ -67,19 +67,12 @@ def test_list_conversations_mock() -> None:
     assert rows[0].item_title == "Bike"
 
 
-def test_login_password_missing_env(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("WALLAPOP_USER", raising=False)
-    monkeypatch.delenv("WALLAPOP_PW", raising=False)
-    monkeypatch.delenv("WALLAPOP_EMAIL", raising=False)
-    monkeypatch.delenv("WALLAPOP_PASSWORD", raising=False)
+def test_login_password_missing_args() -> None:
     with pytest.raises(WallaAuthError):
-        login_password()
+        login_password(username="", password="")
 
 
-def test_login_password_empty_400(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("WALLAPOP_USER", "u@x.com")
-    monkeypatch.setenv("WALLAPOP_PW", "secret")
-
+def test_login_password_empty_400() -> None:
     class Resp:
         status_code = 400
         content = b""
@@ -90,7 +83,7 @@ def test_login_password_empty_400(monkeypatch: pytest.MonkeyPatch) -> None:
     with patch("walla.account.login.requests.post", return_value=Resp()):
         with patch("walla.account.login.wait_turn"):
             with pytest.raises(WallaAuthError, match="Password login failed"):
-                login_password()
+                login_password(username="u@x.com", password="secret")
 
 
 def test_favorites_unsupported() -> None:

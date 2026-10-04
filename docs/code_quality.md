@@ -15,7 +15,7 @@ Strict downward DAG. Lower ranks never import higher ranks. Cycles are fatal.
 ```
 [10] walla.models          Pydantic DTOs only
 [20] walla.http            curl_cffi client, polite spacing, headers
-[30] walla.core            Envelope, errors, paths, dotenv, human_fix
+[30] walla.core            Envelope, errors, paths, human_fix
 [40] walla.search          Public look (search / item / categories)
 [40] walla.account         Session, inbox, say, offer, favorites
 [40] walla.hunter          Profile, watches, GRAB / LOOK / PASS
@@ -52,10 +52,10 @@ split into single-responsibility submodules behind an `__init__.py` facade.
 
 ## 4. Credential Zero-Trust
 
-- Never log, print, or persist `WALLAPOP_PW`.
 - Never log a bearer access token or the NextAuth session cookie value.
 - Session file (`~/.config/walla/session.json`) is mode `0600`.
-- `doctor` reports `auth.configured` as a boolean, never the secret.
+- `doctor` reports `auth.session` as a boolean, never the secret.
+- No `.env` credentials; login is cookie paste (optional password prompt).
 - Redacted fixtures only. No tokens in `fixtures/`.
 
 ---

@@ -104,6 +104,12 @@ def make_offer(
     if not confirm:
         raise ValueError("offer requires confirm=True / --yes")
     item = get_item(item_id, client=client)
+    profile = load_profile()
+    cap = profile.spend_cap
+    if cap is not None and offer_eur > cap:
+        raise ValueError(
+            f"Offer {offer_eur} EUR exceeds budget {cap} EUR. Refuse."
+        )
     quote = quote_offer(item, offer_eur)
     if not quote.within_pickup:
         raise ValueError(

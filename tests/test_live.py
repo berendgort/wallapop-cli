@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import os
-
 import pytest
 
 from walla.http.client import HttpClient
@@ -25,22 +23,20 @@ def test_live_search_item_categories() -> None:
     assert item.id == result.listings[0].id
 
 
-def test_live_login_password_or_skip() -> None:
-    """Password login often returns empty 400 (MFA). Document outcome."""
-    from walla.account.login import login_password
-    from walla.core.dotenv import load_dotenv_files
+def test_live_login_cookie_or_skip() -> None:
+    """Cookie mint via stored session, or skip if none."""
+    from walla.account.login import ensure_access_token
+    from walla.account.session_store import load_session
     from walla.core.exceptions import WallaAuthError
 
-    load_dotenv_files()
-    if not os.environ.get("WALLAPOP_USER") or not os.environ.get("WALLAPOP_PW"):
-        pytest.skip("no credentials")
+    if load_session() is None:
+        pytest.skip("no session; run walla login first")
     reset_polite()
     try:
-        sess = login_password()
+        sess = ensure_access_token()
         assert sess.access_token
     except WallaAuthError as exc:
-        # Expected for many accounts; cookie path is the fallback.
-        assert "Password login failed" in str(exc) or "no access token" in str(exc)
+        assert "login" in str(exc).lower() or "session" in str(exc).lower()
 
 
 def test_live_rate_probe_bounded() -> None:

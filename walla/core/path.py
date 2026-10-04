@@ -7,6 +7,7 @@ from pathlib import Path
 
 __all__ = (
     "config_dir",
+    "last_search_path",
     "profile_path",
     "session_path",
     "watches_path",
@@ -30,3 +31,7 @@ def session_path() -> Path:
 
 def watches_path() -> Path:
     return config_dir() / "watches.json"
+
+
+def last_search_path() -> Path:
+    return config_dir() / "last_search.json"

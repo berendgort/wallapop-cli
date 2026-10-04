@@ -6,7 +6,7 @@ from typing import Any
 
 from walla.account.actions import make_offer, quote_offer
 from walla.account.inbox import list_conversations, list_messages, send_message
-from walla.account.login import login_password, whoami
+from walla.account.login import login_cookie_text, whoami
 from walla.core.envelope import error_payload, success_payload
 from walla.core.instruct import instruct_recipe
 from walla.hunter.profile_store import load_profile
@@ -78,12 +78,15 @@ def build_server() -> Any:
         )
 
     @mcp.tool()
-    def login() -> dict[str, Any]:
+    def login(cookie: str) -> dict[str, Any]:
+        """Log in with a pasted __Secure-next-auth.session-token value."""
+
         def _run() -> dict[str, Any]:
-            sess = login_password()
+            sess = login_cookie_text(cookie)
             return {
                 "authenticated": True,
                 "has_access_token": bool(sess.access_token),
+                "has_cookie": bool(sess.session_cookie),
             }
 
         return _wrap(_run)

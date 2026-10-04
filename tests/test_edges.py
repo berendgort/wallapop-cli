@@ -81,8 +81,6 @@ def test_cookie_bare_token(tmp_path: Path) -> None:
 
 def test_login_success_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("WALLA_CONFIG_DIR", str(tmp_path))
-    monkeypatch.setenv("WALLAPOP_USER", "u@x.com")
-    monkeypatch.setenv("WALLAPOP_PW", "pw")
 
     class Resp:
         status_code = 200
@@ -93,7 +91,7 @@ def test_login_success_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
 
     with patch("walla.account.login.requests.post", return_value=Resp()):
         with patch("walla.account.login.wait_turn"):
-            sess = login_password()
+            sess = login_password(username="u@x.com", password="pw")
     assert sess.access_token == "A"
 
 

@@ -53,4 +53,11 @@ def parse_intake(text: str) -> Profile:
         profile.budget = float(fields["budget"])
     if "max_price" in fields:
         profile.max_price = float(fields["max_price"])
+    if "aggressiveness" in fields or "aggression" in fields:
+        raw = (fields.get("aggressiveness") or fields.get("aggression") or "fair").lower()
+        if raw in ("soft", "fair", "firm"):
+            profile.aggressiveness = raw  # type: ignore[assignment]
+    if "must" in fields or "must_match" in fields:
+        raw = fields.get("must") or fields.get("must_match") or ""
+        profile.must_match = [w for w in raw.replace(",", " ").split() if w]
     return profile

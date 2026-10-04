@@ -23,9 +23,11 @@ app = typer.Typer(
     name="walla",
     cls=_WallaGroup,
     help=(
-        "Wallapop.es look · offer · talk for humans and agents. "
-        "Happy path: setup -> search -> login -> inbox / offer. "
-        "Run `walla instruct --json` for the recipe."
+        "Wallapop.es look · offer · talk. "
+        "Example ask: find a used kite near Barcelona under 400eur, "
+        "message seller, offer if GRAB. "
+        "Install: pipx install 'walla-cli[mcp]'. "
+        "Recipe: walla instruct --json."
     ),
     no_args_is_help=True,
     add_completion=False,

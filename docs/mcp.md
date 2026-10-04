@@ -3,7 +3,7 @@
 Optional FastMCP adapter over the same core as the CLI.
 
 ```bash
-pipx install -e '.[mcp]'
+pipx install 'walla-cli[mcp]'
 walla-mcp          # STDIO
 walla-mcp-http     # http://127.0.0.1:8000/mcp/
 ```

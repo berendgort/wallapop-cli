@@ -15,9 +15,13 @@ from walla.account.actions import (
     remove_favorite,
 )
 from walla.account.inbox import list_conversations, list_messages, send_message
-from walla.account.login import login_cookies, login_password, whoami
+from walla.account.login import login_cookie_text, login_cookies, whoami
+from walla.account.prompt import interactive_login, session_summary
 from walla.account.session_store import clear_session, load_session
 from walla.cli.catch import run_cmd
+from walla.core.exceptions import WallaAuthError
+from walla.hunter.negotiate import draft_negotiation
+from walla.hunter.profile_store import load_profile
 from walla.search.api import get_item
 
 __all__ = ("register",)
@@ -26,21 +30,28 @@ __all__ = ("register",)
 def register(app: typer.Typer) -> None:
     @app.command("login")
     def login_cmd(
-        cookies: Path | None = typer.Option(None, "--cookies"),
+        cookies: Path | None = typer.Option(None, "--cookies", help="cookies.txt / JSON export"),
+        cookie: str | None = typer.Option(None, "--cookie", help="Raw session cookie value"),
+        password: bool = typer.Option(
+            False, "--password", help="Optional email/password prompt (often fails on MFA)"
+        ),
         json: bool = typer.Option(False, "--json"),
     ) -> None:
+        """Log in by pasting a browser session cookie (no .env)."""
+
         def _run() -> dict[str, Any]:
-            if cookies:
+            if cookies is not None:
                 sess = login_cookies(cookies)
+            elif cookie:
+                sess = login_cookie_text(cookie)
+            elif json and not password:
+                raise WallaAuthError(
+                    "Non-interactive login needs --cookie '<value>' or --cookies <file>. "
+                    "Or run without --json to paste interactively."
+                )
             else:
-                sess = login_password()
-            return {
-                "authenticated": True,
-                "has_access_token": bool(sess.access_token),
-                "has_cookie": bool(sess.session_cookie),
-                "user_id": sess.user_id,
-                "micro_name": sess.micro_name,
-            }
+                sess = interactive_login(password=password)
+            return session_summary(sess)
 
         run_cmd(_run, as_json=json)
 
@@ -87,6 +98,21 @@ def register(app: typer.Typer) -> None:
     ) -> None:
         def _run() -> dict[str, Any]:
             return send_message(conversation_id, text, confirm=yes)
+
+        run_cmd(_run, as_json=json)
+
+    @app.command("negotiate")
+    def negotiate_cmd(
+        item_id: str = typer.Argument(...),
+        seller: str | None = typer.Option(None, "--seller", help="Seller micro_name if known"),
+        json: bool = typer.Option(False, "--json"),
+    ) -> None:
+        """Draft a win-win Spanish message + fair offer. Never sends."""
+
+        def _run() -> dict[str, Any]:
+            item = get_item(item_id)
+            brief = draft_negotiation(item, load_profile(), seller_name=seller)
+            return brief.model_dump(mode="json")
 
         run_cmd(_run, as_json=json)
 

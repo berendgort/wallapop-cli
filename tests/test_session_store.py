@@ -53,3 +53,24 @@ def test_parse_cookie_missing(tmp_path: Path) -> None:
     f.write_text("foo=bar\n", encoding="utf-8")
     with pytest.raises(WallaAuthError):
         parse_cookie_export(f)
+
+
+def test_parse_cookie_editor_name_colon_quotes() -> None:
+    from walla.account.cookies import parse_cookie_text
+
+    raw = '__Secure-next-auth.session-token:"eyJhbGci.' + ("a" * 220) + '.bbb"'
+    cookie, _ = parse_cookie_text(raw)
+    assert cookie.startswith("eyJhbGci.")
+    assert cookie.endswith(".bbb")
+
+
+def test_login_cookie_text_does_not_treat_blob_as_path() -> None:
+    from unittest.mock import patch
+
+    from walla.account.login import login_cookie_text
+
+    blob = '__Secure-next-auth.session-token:"' + ("x." * 400) + 'yyy"'
+    with patch("walla.account.login._session_from_cookie") as mock_sess:
+        mock_sess.return_value = SessionData(access_token="t", session_cookie="c")
+        login_cookie_text(blob)
+    assert mock_sess.call_args[0][0].startswith("x.")

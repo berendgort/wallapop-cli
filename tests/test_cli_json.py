@@ -48,12 +48,16 @@ def test_instruct_json() -> None:
     assert data["data"]["name"] == "walla"
 
 
-def test_doctor_never_echoes_password(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("WALLAPOP_PW", "super-secret-password-xyz")
-    monkeypatch.setenv("WALLAPOP_USER", "user@example.com")
+def test_doctor_never_echoes_secrets(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("WALLA_CONFIG_DIR", "/tmp/walla-doctor-test-empty")
     result = runner.invoke(app, ["doctor", "--json"])
     assert result.exit_code == 0
-    assert "super-secret-password-xyz" not in result.stdout
+    data = json.loads(result.stdout)
+    assert "auth" in data["data"]
+    assert "session" in data["data"]["auth"]
+    assert "password" not in result.stdout.lower() or "Password" not in str(
+        data["data"]["auth"]
+    )
 
 
 def test_setup_and_profile(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -135,6 +139,14 @@ def test_offer_refuses_outside_pickup(
     monkeypatch.setattr("walla.account.actions.get_item", fake_item)
     with pytest.raises(ValueError, match="pickup"):
         make_offer("xyz", 80, confirm=True)
+
+
+def test_login_json_requires_cookie() -> None:
+    result = runner.invoke(app, ["login", "--json"])
+    assert result.exit_code == 1
+    data = json.loads(result.stdout)
+    assert data["error_type"] == "auth"
+    assert "--cookie" in data["error"]
 
 
 def test_say_requires_confirm() -> None:

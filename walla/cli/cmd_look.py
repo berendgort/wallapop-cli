@@ -1,13 +1,15 @@
-"""Look commands: search, item, categories, watch."""
+"""Look commands: search, item, categories, watch, export."""
 
 from __future__ import annotations
 
 import uuid
+from pathlib import Path
 from typing import Any
 
 import typer
 
 from walla.cli.catch import run_cmd
+from walla.hunter.export import load_last_search, save_last_search, write_exports
 from walla.hunter.profile_store import load_profile
 from walla.hunter.verdict import score_listing
 from walla.hunter.watches import (
@@ -31,6 +33,10 @@ def register(app: typer.Typer) -> None:
         max_price: float | None = typer.Option(None, "--max-price"),
         category_id: int | None = typer.Option(None, "--category"),
         order_by: str = typer.Option("most_relevance", "--order"),
+        export: str | None = typer.Option(
+            None, "--export", help="Formats: md,csv,html,pdf"
+        ),
+        out: Path | None = typer.Option(None, "--out", help="Export directory"),
         json: bool = typer.Option(False, "--json"),
     ) -> None:
         def _run() -> dict[str, Any]:
@@ -54,10 +60,62 @@ def register(app: typer.Typer) -> None:
             for listing in result.listings:
                 listing.verdict = score_listing(listing, profile)
                 rows.append(listing.model_dump(mode="json"))
-            return {
+            mandate = {
+                "budget": profile.spend_cap,
+                "aggressiveness": profile.aggressiveness,
+                "must_match": profile.must_match,
+            }
+            save_last_search(keywords=keywords, listings=rows, mandate=mandate)
+            payload: dict[str, Any] = {
                 "count": len(rows),
                 "next_page": result.next_page,
                 "listings": rows,
+                "mandate": mandate,
+                "hitl": {
+                    "grabs": sum(1 for r in rows if r.get("verdict") == "GRAB"),
+                    "ask_if_multiple_grabs": True,
+                    "next": (
+                        "If one GRAB: walla negotiate <id> --json. "
+                        "If several: ask human to pick an id. Never pay."
+                    ),
+                },
+            }
+            if export:
+                payload["exported"] = write_exports(
+                    rows,
+                    profile,
+                    formats=[p.strip() for p in export.split(",")],
+                    out_dir=out or Path.cwd(),
+                    keywords=keywords,
+                )
+            return payload
+
+        run_cmd(_run, as_json=json)
+
+    @app.command("export")
+    def export_cmd(
+        format: str = typer.Option(
+            "md,csv,html,pdf", "--format", help="md,csv,html,pdf"
+        ),
+        out: Path | None = typer.Option(None, "--out", help="Output directory"),
+        json: bool = typer.Option(False, "--json"),
+    ) -> None:
+        """Export the last search shortlist (no network)."""
+
+        def _run() -> dict[str, Any]:
+            data = load_last_search()
+            profile = load_profile()
+            written = write_exports(
+                list(data.get("listings") or []),
+                profile,
+                formats=[p.strip() for p in format.split(",")],
+                out_dir=out or Path.cwd(),
+                keywords=str(data.get("keywords") or ""),
+            )
+            return {
+                "keywords": data.get("keywords"),
+                "count": len(data.get("listings") or []),
+                "exported": written,
             }
 
         run_cmd(_run, as_json=json)

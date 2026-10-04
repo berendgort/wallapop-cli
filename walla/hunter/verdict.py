@@ -9,6 +9,7 @@ from walla.models.profile import Profile
 
 __all__ = (
     "haversine_km",
+    "matches_must",
     "score_listing",
 )
 
@@ -22,11 +23,22 @@ def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     return 2 * r * math.asin(math.sqrt(a))
 
 
+def matches_must(listing: Listing, profile: Profile) -> bool:
+    """True when every must_match token appears in title or description."""
+    tokens = [t.lower() for t in profile.must_match if t.strip()]
+    if not tokens:
+        return True
+    blob = f"{listing.title} {listing.description or ''}".lower()
+    return all(tok in blob for tok in tokens)
+
+
 def score_listing(listing: Listing, profile: Profile) -> str:
     """Return GRAB / LOOK / PASS."""
     if listing.reserved:
         return "PASS"
-    budget = profile.budget or profile.max_price
+    if not matches_must(listing, profile):
+        return "PASS"
+    budget = profile.spend_cap
     if budget is not None and listing.price.amount > budget:
         return "PASS"
     if profile.lat is not None and profile.lon is not None and listing.location:

@@ -85,14 +85,7 @@ def draft_negotiation(
     offer = _first_offer(ask, walk, verdict, profile.aggressiveness)
     specific = _specific_thing(listing)
     greeting = f"Hola {seller_name}," if seller_name else "Hola,"
-    opening = (
-        f"{greeting} me interesa tu {specific}. "
-        "¿Sigue disponible? Puedo pasar hoy si te va bien."
-    )
-    offer_line = (
-        f"Gracias. Por el estado y lo que hay ahora mismo, te propongo "
-        f"{_fmt_eur(offer)} € y lo recojo cuando te venga bien."
-    )
+    opening, offer_line, you_give = _copy(greeting, specific, offer, _ships(listing))
     return NegotiationBrief(
         item_id=listing.id,
         title=listing.title,
@@ -105,9 +98,35 @@ def draft_negotiation(
         offer_line=offer_line,
         why=_why(ask, offer, verdict, profile.aggressiveness),
         seller_gives="Un precio justo y una venta rapida sin pelea.",
-        you_give="Recogida flexible, pago claro, trato respetuoso.",
+        you_give=you_give,
         tone_checks=_tone_checks(opening, offer_line, offer, ask),
     )
+
+
+def _ships(listing: Listing) -> bool:
+    return bool(listing.user_allows_shipping or listing.shippable)
+
+
+def _copy(greeting: str, specific: str, offer: float, ships: bool) -> tuple[str, str, str]:
+    if ships:
+        opening = (
+            f"{greeting} me interesa tu {specific}. "
+            "¿Sigue disponible? Me iría bien envío Wallapop."
+        )
+        offer_line = (
+            f"Gracias. Por el estado y lo que hay ahora mismo, te propongo "
+            f"{_fmt_eur(offer)} € con envío Wallapop."
+        )
+        return opening, offer_line, "Envío Wallapop, pago claro, trato respetuoso."
+    opening = (
+        f"{greeting} me interesa tu {specific}. "
+        "¿Sigue disponible? Puedo pasar hoy si te va bien."
+    )
+    offer_line = (
+        f"Gracias. Por el estado y lo que hay ahora mismo, te propongo "
+        f"{_fmt_eur(offer)} € y lo recojo cuando te venga bien."
+    )
+    return opening, offer_line, "Recogida flexible, pago claro, trato respetuoso."
 
 
 def _assert_reachable(listing: Listing, profile: Profile) -> None:

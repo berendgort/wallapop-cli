@@ -8,6 +8,7 @@ from walla.models.listing import Listing
 from walla.models.profile import Profile
 
 __all__ = (
+    "geo_scope",
     "haversine_km",
     "matches_must",
     "score_listing",
@@ -32,8 +33,26 @@ def matches_must(listing: Listing, profile: Profile) -> bool:
     return all(tok in blob for tok in tokens)
 
 
-def score_listing(listing: Listing, profile: Profile) -> str:
-    """Return GRAB / LOOK / PASS."""
+def geo_scope(*, local: bool) -> dict[str, object]:
+    """Search contract for agents. lat/lon on the wire is a ranking bias."""
+    if local:
+        return {
+            "scope": "local",
+            "distance_filter": True,
+            "note": "Human asked nearby or pickup. PASS outside profile.km.",
+        }
+    return {
+        "scope": "spain",
+        "distance_filter": False,
+        "note": (
+            "Spain-wide. Shipping counts anywhere. "
+            "Use --local only if the human asked nearby, pickup, or no shipping."
+        ),
+    }
+
+
+def score_listing(listing: Listing, profile: Profile, *, local: bool = False) -> str:
+    """Return GRAB / LOOK / PASS. Distance fences only when local=True."""
     if listing.reserved:
         return "PASS"
     if not matches_must(listing, profile):
@@ -41,14 +60,17 @@ def score_listing(listing: Listing, profile: Profile) -> str:
     budget = profile.spend_cap
     if budget is not None and listing.price.amount > budget:
         return "PASS"
-    if profile.lat is not None and profile.lon is not None and listing.location:
-        la, lo = listing.location.latitude, listing.location.longitude
-        if la is not None and lo is not None:
-            dist = haversine_km(profile.lat, profile.lon, la, lo)
-            if dist > profile.km and not listing.user_allows_shipping:
-                return "PASS"
-            if budget is not None and listing.price.amount <= budget * 0.85 and dist <= profile.km:
-                return "GRAB"
+    if local and _outside_km(listing, profile):
+        return "PASS"
     if budget is not None and listing.price.amount <= budget * 0.9:
         return "GRAB"
     return "LOOK"
+
+
+def _outside_km(listing: Listing, profile: Profile) -> bool:
+    if profile.lat is None or profile.lon is None or not listing.location:
+        return False
+    la, lo = listing.location.latitude, listing.location.longitude
+    if la is None or lo is None:
+        return False
+    return haversine_km(profile.lat, profile.lon, la, lo) > profile.km

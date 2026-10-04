@@ -11,7 +11,8 @@ import typer
 from walla.cli.catch import run_cmd
 from walla.hunter.export import load_last_search, save_last_search, write_exports
 from walla.hunter.profile_store import load_profile
-from walla.hunter.verdict import score_listing
+from walla.hunter.shortlist import PRESENT_RULE, rank_shortlist
+from walla.hunter.verdict import geo_scope, score_listing
 from walla.hunter.watches import (
     Watch,
     diff_new_ids,
@@ -33,6 +34,9 @@ def register(app: typer.Typer) -> None:
         max_price: float | None = typer.Option(None, "--max-price"),
         category_id: int | None = typer.Option(None, "--category"),
         order_by: str = typer.Option("most_relevance", "--order"),
+        local: bool = typer.Option(
+            False, "--local", help="PASS listings outside profile.km"
+        ),
         export: str | None = typer.Option(
             None, "--export", help="Formats: md,csv,html,pdf"
         ),
@@ -58,7 +62,7 @@ def register(app: typer.Typer) -> None:
             )
             rows = []
             for listing in result.listings:
-                listing.verdict = score_listing(listing, profile)
+                listing.verdict = score_listing(listing, profile, local=local)
                 rows.append(listing.model_dump(mode="json"))
             mandate = {
                 "budget": profile.spend_cap,
@@ -66,15 +70,21 @@ def register(app: typer.Typer) -> None:
                 "must_match": profile.must_match,
             }
             save_last_search(keywords=keywords, listings=rows, mandate=mandate)
+            shortlist = rank_shortlist(rows)
             payload: dict[str, Any] = {
                 "count": len(rows),
                 "next_page": result.next_page,
                 "listings": rows,
+                "shortlist": shortlist,
+                "geo": geo_scope(local=local),
                 "mandate": mandate,
+                "source": "wallapop.es",
                 "hitl": {
                     "grabs": sum(1 for r in rows if r.get("verdict") == "GRAB"),
                     "ask_if_multiple_grabs": True,
+                    "present": PRESENT_RULE,
                     "next": (
+                        "Show shortlist with markdown links (data.shortlist). "
                         "If one GRAB: walla negotiate <id> --json. "
                         "If several: ask human to pick an id. Never pay."
                     ),

@@ -105,7 +105,7 @@ Optional MCP:
 | Step | Agent alone | Ask human |
 |------|-------------|-----------|
 | Search inside mandate | yes | if query vague or budget unset |
-| Shortlist | show GRABs | if more than one GRAB, pick the id |
+| Shortlist | show ranked Wallapop rows with markdown item links | if more than one GRAB, pick the id |
 | Negotiate draft | yes | approve Spanish text |
 | `say --yes` | never | yes to that exact text |
 | `offer --yes` | never; refuse if EUR > budget | yes to that exact EUR |
@@ -117,6 +117,8 @@ Rules:
 - `--yes` means send chat or price offer only. It never completes a purchase.
 - If they only asked to look, do not send.
 - Ambiguous match or multiple GRABs: ask once with candidates.
+- Always present Wallapop shortlists ranked best-first with a markdown link on every item URL.
+- Default search is all of Spain. Shipping counts anywhere. Use `walla search --local` only when the human asked for nearby or pickup.
 - In-person offers outside pickup radius: refuse.
 - Envelope: `ok`, `api_version`, `data` or `error` / `error_type` / `retryable`.
 

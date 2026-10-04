@@ -42,6 +42,29 @@ def test_verdict_grab() -> None:
     assert score_listing(_listing(price=Money(amount=100, currency="EUR")), p) == "GRAB"
 
 
+def test_far_shipping_is_grab_unless_local() -> None:
+    p = Profile(lat=41.39, lon=2.17, km=30, budget=800)
+    far = _listing(
+        price=Money(amount=700, currency="EUR"),
+        user_allows_shipping=True,
+        shippable=True,
+        location=ListingLocation(latitude=39.53, longitude=2.72, city="Mallorca"),
+    )
+    assert score_listing(far, p) == "GRAB"
+    assert score_listing(far, p, local=True) == "PASS"
+
+
+def test_far_pickup_stays_visible() -> None:
+    p = Profile(lat=41.39, lon=2.17, km=5, budget=500)
+    far = _listing(
+        price=Money(amount=400, currency="EUR"),
+        user_allows_shipping=False,
+        location=ListingLocation(latitude=40.4, longitude=-3.7, city="Madrid"),
+    )
+    assert score_listing(far, p) == "GRAB"
+    assert score_listing(far, p, local=True) == "PASS"
+
+
 def test_watch_diff_and_merge() -> None:
     assert diff_new_ids(["a"], ["a", "b"]) == ["b"]
     w = Watch(id="1", keywords="bici", seen_ids=["a"])

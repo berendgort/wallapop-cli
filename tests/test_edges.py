@@ -68,7 +68,8 @@ def test_verdict_distance_pass(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) 
         user_allows_shipping=False,
         location=ListingLocation(latitude=40.4, longitude=-3.7),
     )
-    assert score_listing(far, p) == "PASS"
+    assert score_listing(far, p) == "GRAB"
+    assert score_listing(far, p, local=True) == "PASS"
 
 
 def test_cookie_bare_token(tmp_path: Path) -> None:

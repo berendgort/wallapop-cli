@@ -36,12 +36,20 @@ def instruct_recipe() -> dict[str, Any]:
             "ladder": [
                 {
                     "step": "search",
-                    "agent": "alone inside budget + radius + must_match",
+                    "agent": (
+                        "alone, Spain-wide, inside budget + must_match. "
+                        "Keep model and size in the keywords. "
+                        "--local only if the human asked nearby or pickup."
+                    ),
                     "ask_human": "only if query vague or budget unset",
                 },
                 {
                     "step": "shortlist",
-                    "agent": "show GRAB title, EUR, URL, verdict",
+                    "agent": (
+                        "Say these are Wallapop.es results. Show numbered "
+                        "data.shortlist best-first with markdown links on every "
+                        "https://es.wallapop.com/item/… URL. Never omit links."
+                    ),
                     "ask_human": "if more than one GRAB, human picks the id",
                 },
                 {
@@ -75,11 +83,28 @@ def instruct_recipe() -> dict[str, Any]:
             "If no session: ask the human to run `walla login` and paste "
             "__Secure-next-auth.session-token (or pass --cookie for non-interactive).",
             "If mandate.budget is null: ask once for budget + aggression + must words.",
-            "Do the ask with walla … --json and narrate in prose.",
+            "Do the ask with walla … --json. Always narrate as Wallapop.es "
+            "and paste data.shortlist with full item URLs (markdown links).",
             "Draft with walla negotiate; never say/offer without human --yes; never pay.",
         ],
+        "present": {
+            "channel": "wallapop.es",
+            "format": (
+                "1. GRAB · Title · €N · City\n"
+                "   [open on Wallapop](https://es.wallapop.com/item/<web_slug>)"
+            ),
+            "order": "best-first: GRAB then LOOK; lower EUR within band",
+            "rule": (
+                "Every shortlist row must include the full item URL. "
+                "Never table-only without links."
+            ),
+        },
         "verbs": {
-            "look": ["walla search <q> --json", "walla item <id> --json"],
+            "look": [
+                "walla search <q> --json",
+                "walla search <q> --local --json",
+                "walla item <id> --json",
+            ],
             "talk": [
                 "walla negotiate <id> --json",
                 "walla inbox --json",
@@ -92,10 +117,14 @@ def instruct_recipe() -> dict[str, Any]:
             ],
         },
         "rules": [
+            "Always present Wallapop shortlists ranked best-first with markdown item links.",
             "search / item / inbox / negotiate are safe reads or drafts.",
             "say and offer require --yes / confirm=true; name listing + euros.",
             "If only asked to look, do not send.",
             "Ambiguous match or multiple GRABs: ask once with candidates.",
+            "Default search is all of Spain. Shipping is enough; do not fence on profile.km.",
+            "walla search --local only when the human asked nearby, pickup, or no shipping.",
+            "Keep model and size tokens in the query. Do not drop them to widen geography.",
             "Refuse in-person offers outside pickup radius.",
             "Refuse offer_eur above mandate.budget.",
             "Negotiate drafts are win-win: respectful Spanish, no lowballs, no pressure.",

@@ -91,9 +91,28 @@ def test_refuse_outside_pickup() -> None:
         draft_negotiation(far, profile)
 
 
-def test_instruct_has_never_pay(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_shipping_draft_asks_envio_not_pickup() -> None:
+    profile = Profile(lat=41.39, lon=2.17, km=30, pickup_km=30, budget=800)
+    brief = draft_negotiation(
+        _listing(price=800, lat=39.53, lon=2.72, ship=True, title="North Reach 13m 2023"),
+        profile,
+    )
+    blob = f"{brief.opening}\n{brief.offer_line}".lower()
+    assert "envío" in blob
+    assert "pasar hoy" not in blob
+    assert "recojo" not in blob
+
+
+def test_instruct_spain_default(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("WALLA_CONFIG_DIR", str(tmp_path))
     data = instruct_recipe()
     assert data["hitl"]["never_pay"] is True
     assert data["hitl"]["yes_means"]
     assert any(s["step"] == "pay_or_buy" for s in data["hitl"]["ladder"])
+    blob = " ".join(data["rules"]) + data["hitl"]["ladder"][0]["agent"]
+    assert "Spain" in blob
+    assert "--local" in blob
+    assert "present" in data
+    assert "wallapop.es" in data["present"]["channel"]
+    assert "es.wallapop.com/item" in data["present"]["format"]
+    assert "link" in data["hitl"]["ladder"][1]["agent"].lower()

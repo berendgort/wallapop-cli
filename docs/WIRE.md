@@ -36,7 +36,8 @@ optional.
 
 After `current_step=photo`, the steps `draft` may include `category_leaf_id`
 (title+photo hint). `GET /api/v3/suggested-item-data/{upload_id}` often returns
-empty HTTP 200; still poll before `loading`. CLI: `walla sell … --title … --suggest`.
+empty HTTP 200; still poll before `loading`. CLI: `walla sell … --title …
+--suggest` (explicit only; draft without `--suggest` does not upload).
 `walla desk --watch` polls the inbox until `stack.best` converges.
 
 ## Auth

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from pydantic import BaseModel, ConfigDict
 
 from walla.models.profile import Category
 
@@ -14,8 +14,9 @@ __all__ = (
 )
 
 
-@dataclass(frozen=True)
-class CategoryHit:
+class CategoryHit(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
     leaf_id: str
     root_id: str
     path: str
@@ -70,7 +71,6 @@ def find_categories(roots: list[Category], query: str) -> list[CategoryHit]:
         elif name_l.startswith(tokens[-1]) or tokens[-1].startswith(_stem(name_l)):
             score += 25
         score += sum(6 for tok in tokens if tok in name_l)
-        # Prefer the named leaf over a shallow cousin that only contains the token.
         if any(_stem(part) == _stem(tokens[-1]) for part in blob.split(" / ")):
             score += 15
         scored.append((score, hit))

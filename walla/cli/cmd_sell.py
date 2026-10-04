@@ -7,7 +7,7 @@ from typing import Any
 
 import typer
 
-from walla.account.sell import delete_listing, publish_listing
+from walla.account.sell import delete_listing, publish_listing, publish_prepared
 from walla.account.sell_suggest import suggest_from_photos
 from walla.account.sell_wire import CONDITIONS, SELL_QUESTIONS, missing_sell_fields
 from walla.cli.catch import run_cmd
@@ -41,7 +41,7 @@ def register(app: typer.Typer) -> None:
         suggest: bool = typer.Option(
             False,
             "--suggest",
-            help="Prefill category via Wallapop steps (needs --title)",
+            help="Prefill category via Wallapop steps (needs --title; uploads photos)",
         ),
         yes: bool = typer.Option(False, "--yes", help="Publish for real"),
         json: bool = typer.Option(False, "--json"),
@@ -58,8 +58,7 @@ def register(app: typer.Typer) -> None:
             root_id = root
             picked = None
             suggested = None
-            auto = bool(title) and not category and not yes
-            if suggest or auto:
+            if suggest:
                 if not title:
                     raise ValueError("--suggest needs --title")
                 suggested = suggest_from_photos(
@@ -106,7 +105,7 @@ def register(app: typer.Typer) -> None:
                 },
                 "hint": (
                     "Fill missing fields, then walla sell <photos> … --yes. "
-                    "walla sell … --title … --suggest prefills category from Wallapop."
+                    "Only --suggest uploads photos to prefill category."
                 ),
             }
             if picked is not None:
@@ -126,21 +125,57 @@ def register(app: typer.Typer) -> None:
                 )
             if profile.lat is None or profile.lon is None:
                 raise ValueError("Set location first: walla setup --lat … --lon …")
-            assert title_use and description and eur is not None and leaf and root_id
+            if not title_use or not description or eur is None or not leaf or not root_id:
+                raise ValueError(
+                    "Cannot publish; need title, description, eur, category leaf, and root"
+                )
             lowest = min(floor, eur) if floor is not None else eur
-            created = publish_listing(
-                paths,
-                title=title_use,
-                description=description,
-                price_eur=eur,
-                category_leaf_id=str(leaf),
-                root_category_id=str(root_id),
-                lat=profile.lat,
-                lon=profile.lon,
-                condition=condition,
-                shipping=ship,
-                weight_kg=weight_kg,
+            sug_leaf = (
+                str(suggested.get("category_leaf_id") or "") if suggested else ""
             )
+            reuse_id = (
+                str(suggested["upload_id"])
+                if (
+                    suggested
+                    and suggested.get("upload_id")
+                    and sug_leaf
+                    and sug_leaf == str(leaf)
+                )
+                else ""
+            )
+            if reuse_id:
+                created = publish_prepared(
+                    paths,
+                    upload_id=reuse_id,
+                    title=title_use,
+                    description=description,
+                    price_eur=eur,
+                    category_leaf_id=str(leaf),
+                    lat=profile.lat,
+                    lon=profile.lon,
+                    condition=condition,
+                    shipping=ship,
+                    weight_kg=weight_kg,
+                    wire_draft={
+                        "title": title_use,
+                        "category_leaf_id": str(leaf),
+                        "root_category_id": str(root_id),
+                    },
+                )
+            else:
+                created = publish_listing(
+                    paths,
+                    title=title_use,
+                    description=description,
+                    price_eur=eur,
+                    category_leaf_id=str(leaf),
+                    root_category_id=str(root_id),
+                    lat=profile.lat,
+                    lon=profile.lon,
+                    condition=condition,
+                    shipping=ship,
+                    weight_kg=weight_kg,
+                )
             remember(
                 Pursuit(
                     item_id=str(created["id"]),

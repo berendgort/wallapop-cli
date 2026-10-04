@@ -16,6 +16,7 @@ from walla.account.sell_steps import (
     poll_suggested,
     post_step,
 )
+from walla.account.sell_upload import IMAGE_TYPES, upload_pictures
 from walla.account.sell_wire import build_item_body
 from walla.core.exceptions import (
     WallaHTTPError,
@@ -33,45 +34,11 @@ __all__ = (
     "create_listing",
     "delete_listing",
     "publish_listing",
+    "publish_prepared",
     "upload_pictures",
 )
 
 _UPLOAD_ACCEPT = "application/vnd.upload-v2+json"
-_IMAGE_TYPES = {
-    ".jpg": "image/jpeg",
-    ".jpeg": "image/jpeg",
-    ".png": "image/png",
-    ".webp": "image/webp",
-}
-
-
-def upload_pictures(upload_id: str, photos: list[Path]) -> int:
-    """POST each photo to /api/v3/upload/{id}/pictures (HTTP 204)."""
-    if not photos:
-        raise ValueError("at least one photo required")
-    headers = {k: v for k, v in auth_headers().items() if k.lower() != "content-type"}
-    session: Any = requests.Session()
-    for path in photos:
-        data = path.read_bytes()
-        ctype = _IMAGE_TYPES.get(path.suffix.lower(), "image/jpeg")
-        wait_turn()
-        mp = CurlMime()
-        mp.addpart(name="file", content_type=ctype, filename=path.name, data=data)
-        resp: Any = session.request(
-            "POST",
-            f"{API_BASE}/api/v3/upload/{upload_id}/pictures",
-            headers=headers,
-            multipart=mp,
-            impersonate="chrome",
-            timeout=60,
-        )
-        mp.close()
-        if resp.status_code not in (200, 201, 204):
-            raise WallaHTTPError(
-                f"picture upload HTTP {resp.status_code}: {(resp.text or '')[:200]}",
-                status_code=resp.status_code,
-            )
-    return len(photos)
 
 
 def create_listing(item: dict[str, Any], first_photo: Path) -> dict[str, Any]:
@@ -79,7 +46,7 @@ def create_listing(item: dict[str, Any], first_photo: Path) -> dict[str, Any]:
     headers = {k: v for k, v in auth_headers().items() if k.lower() != "content-type"}
     headers["Accept"] = _UPLOAD_ACCEPT
     data = first_photo.read_bytes()
-    ctype = _IMAGE_TYPES.get(first_photo.suffix.lower(), "image/jpeg")
+    ctype = IMAGE_TYPES.get(first_photo.suffix.lower(), "image/jpeg")
     wait_turn()
     mp = CurlMime()
     mp.addpart(name="image", content_type=ctype, filename=first_photo.name, data=data)
@@ -108,6 +75,54 @@ def delete_listing(item_id: str, *, client: HttpClient | None = None) -> dict[st
     http = client or auth_client()
     http.delete(f"/api/v3/items/{item_id}", auth=True)
     return {"id": item_id, "deleted": True}
+
+
+def publish_prepared(
+    photos: list[Path],
+    *,
+    upload_id: str,
+    title: str,
+    description: str,
+    price_eur: float,
+    category_leaf_id: str,
+    lat: float,
+    lon: float,
+    condition: str = "good",
+    shipping: bool = False,
+    weight_kg: float | None = None,
+    wire_draft: dict[str, str] | None = None,
+) -> dict[str, Any]:
+    """Create item from an upload_id already walked through loading."""
+    paths = [Path(p) for p in photos]
+    for p in paths:
+        if not p.is_file():
+            raise ValueError(f"photo not found: {p}")
+    if not upload_id.strip():
+        raise ValueError("upload_id required")
+    item = build_item_body(
+        upload_id=upload_id,
+        title=title,
+        description=description,
+        price_eur=price_eur,
+        category_leaf_id=category_leaf_id,
+        lat=lat,
+        lon=lon,
+        condition=condition,
+        shipping=shipping,
+        max_weight_kg=weight_kg,
+    )
+    created = create_listing(item, paths[0])
+    if len(paths) > 1:
+        _upload_extra_pictures(created["id"], paths[1:])
+    return {
+        **created,
+        "upload_id": upload_id,
+        "title": title.strip()[:50],
+        "url": _public_item_url(str(created["id"])),
+        "photos": len(paths),
+        "wire_draft": wire_draft or {},
+        "reused_suggest": True,
+    }
 
 
 def publish_listing(
@@ -143,7 +158,8 @@ def publish_listing(
     post_step(http, upload_id, current="category", draft=draft)
     poll_suggested(http, upload_id)
     post_step(http, upload_id, current="loading", draft=draft)
-    item = build_item_body(
+    out = publish_prepared(
+        paths,
         upload_id=upload_id,
         title=title,
         description=description,
@@ -153,19 +169,11 @@ def publish_listing(
         lon=lon,
         condition=condition,
         shipping=shipping,
-        max_weight_kg=weight_kg,
+        weight_kg=weight_kg,
+        wire_draft=wire,
     )
-    created = create_listing(item, paths[0])
-    if len(paths) > 1:
-        _upload_extra_pictures(created["id"], paths[1:])
-    return {
-        **created,
-        "upload_id": upload_id,
-        "title": title.strip()[:50],
-        "url": _public_item_url(str(created["id"])),
-        "photos": len(paths),
-        "wire_draft": wire,
-    }
+    out["reused_suggest"] = False
+    return out
 
 
 def _public_item_url(item_id: str) -> str:
@@ -194,7 +202,7 @@ def _upload_extra_pictures(item_id: str, photos: list[Path]) -> None:
     session: Any = requests.Session()
     for idx, path in enumerate(photos, start=1):
         data = path.read_bytes()
-        ctype = _IMAGE_TYPES.get(path.suffix.lower(), "image/jpeg")
+        ctype = IMAGE_TYPES.get(path.suffix.lower(), "image/jpeg")
         wait_turn()
         mp = CurlMime()
         mp.addpart(name="image", content_type=ctype, filename=path.name, data=data)

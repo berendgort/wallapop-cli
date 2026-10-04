@@ -6,13 +6,13 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-from walla.account.sell import upload_pictures
 from walla.account.sell_steps import (
     auth_client,
     parse_steps_draft,
     poll_suggested,
     post_step,
 )
+from walla.account.sell_upload import upload_pictures
 from walla.search.api import get_categories
 from walla.search.category_find import flatten_categories, resolve_root_id
 

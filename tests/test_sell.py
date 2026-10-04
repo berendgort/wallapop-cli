@@ -70,6 +70,63 @@ def test_missing_sell_fields() -> None:
     assert CONDITIONS[0] == "as_good_as_new"
 
 
+def test_sell_draft_with_title_does_not_suggest(tmp_path: Path) -> None:
+    from typer.testing import CliRunner
+
+    from walla.cli.main import app
+
+    photo = tmp_path / "a.jpg"
+    photo.write_bytes(b"\xff\xd8\xff\xd9")
+    runner = CliRunner()
+    with (
+        patch("walla.cli.cmd_sell.load_profile") as lp,
+        patch("walla.cli.cmd_sell.suggest_from_photos") as sug,
+    ):
+        profile = MagicMock()
+        profile.lat = 41.39
+        profile.lon = 2.17
+        profile.label = "BCN"
+        lp.return_value = profile
+        result = runner.invoke(
+            app, ["sell", str(photo), "--title", "Escritorio", "--json"]
+        )
+    assert result.exit_code == 0, result.output
+    sug.assert_not_called()
+    payload = json.loads(result.output)
+    assert payload["data"]["status"] == "draft"
+    assert "suggested" not in payload["data"]
+
+
+def test_publish_prepared_reuses_upload(tmp_path: Path) -> None:
+    from walla.account.sell import publish_prepared
+
+    photo = tmp_path / "a.jpg"
+    photo.write_bytes(b"\xff\xd8\xff\xd9")
+    listing = MagicMock()
+    listing.url = "https://es.wallapop.com/item/x"
+    listing.web_slug = "x"
+    with (
+        patch(
+            "walla.account.sell.create_listing",
+            return_value={"id": "abc", "flags": {}},
+        ) as create,
+        patch("walla.account.sell.get_item", return_value=listing),
+    ):
+        out = publish_prepared(
+            [photo],
+            upload_id="upload-1",
+            title="T",
+            description="D",
+            price_eur=10,
+            category_leaf_id="24208",
+            lat=41.0,
+            lon=2.0,
+        )
+    assert out["reused_suggest"] is True
+    assert out["upload_id"] == "upload-1"
+    create.assert_called_once()
+
+
 def test_sell_cmd_draft_without_yes(tmp_path: Path) -> None:
     from typer.testing import CliRunner
 

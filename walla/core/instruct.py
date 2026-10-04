@@ -147,7 +147,7 @@ def instruct_recipe() -> dict[str, Any]:
             "desk --watch polls until stack.best converges; still never pay.",
             "Bare say, offer, and sell still need --yes. Never pay or accept in walla.",
             "Sell: drop photos, ask data.questions, then publish with --yes only.",
-            "Sell --suggest prefills category from Wallapop steps when title is set.",
+            "Sell --suggest uploads photos once to prefill category; draft without it is local.",
             "If only asked to look, do not send.",
             "Ambiguous match or multiple GRABs: ask once with candidates.",
             "Default search is all of Spain. Shipping is enough; do not fence on profile.km.",

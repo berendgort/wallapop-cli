@@ -17,8 +17,9 @@ walla categories --find escritorio --json
 walla sell ./shot1.jpg ./shot2.jpg --title "Escritorio madera" --suggest --json
 ```
 
-`--suggest` (or draft with `--title` and no `--category`) asks Wallapop to prefill
-`category_leaf_id` from title+photos. Ask remaining `data.questions`, then:
+`--suggest` uploads photos and asks Wallapop to prefill `category_leaf_id`.
+Draft without `--suggest` stays local (no upload). Ask remaining
+`data.questions`, then:
 
 ```bash
 walla sell ./shot1.jpg ./shot2.jpg \

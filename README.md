@@ -11,11 +11,10 @@
   Dr. Berend Gort  ·  www.berendgort.dev
 ```
 
-<video src="https://github.com/berendgort/wallapop-cli/releases/download/demo/walla-demo.mp4" controls width="100%" poster="docs/assets/walla-demo-poster.jpg"></video>
+[![walla sell demo](docs/assets/walla-demo-preview.gif)](https://github.com/berendgort/wallapop-cli/releases/download/demo/walla-demo.mp4)
 
-[Watch the sell demo](https://github.com/berendgort/wallapop-cli/releases/download/demo/walla-demo.mp4)
-
-Demo music: [Funkee Monkeee](https://mixkit.co/free-stock-music/funkee-monkeee-1140/) by Michael Ramir C.
+▶ [Play full demo with sound](https://github.com/berendgort/wallapop-cli/releases/download/demo/walla-demo.mp4)
+· Demo music: [Funkee Monkeee](https://mixkit.co/free-stock-music/funkee-monkeee-1140/) by Michael Ramir C.
 ([Mixkit Stock Music Free License](https://mixkit.co/license/#musicFree)).
 
 **walla** turns Claude, GPT, or Cursor into a Wallapop helper that actually

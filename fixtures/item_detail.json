@@ -1,0 +1,94 @@
+{
+  "id": "pzpkpw831lj3",
+  "title": {
+    "original": "Bicicleta El\u00e9ctrica Specialized  turbo levo Fattie"
+  },
+  "description": {
+    "original": "Bicicleta el\u00e9ctrica tipo Fattie Talla L. Poco uso. Tija telescopica. No cambio solo presencial.\n\n- Ruedas anchas.\n- Horq"
+  },
+  "taxonomy": [
+    {
+      "id": "17000",
+      "name": "Bikes",
+      "icon": "bike",
+      "link": "https://wallapop.com/discover-content?query=aW5pdGlhdGl2ZU5hbWU9Y2F0ZWdvcnlfbmF2aWdhdGlvbiZzb3VyY2U9Y2F0ZWdvcnktcGFnZSZjYXRlZ29yeUlkPTE3MDAw"
+    },
+    {
+      "id": "10056",
+      "name": "Bikes & tricycles",
+      "link": "https://wallapop.com/discover-content?query=aW5pdGlhdGl2ZU5hbWU9Y2F0ZWdvcnlfbmF2aWdhdGlvbiZzb3VyY2U9Y2F0ZWdvcnktcGFnZSZjYXRlZ29yeUlkPTEwMDU2"
+    },
+    {
+      "id": "10215",
+      "name": "Electric bikes",
+      "link": "https://wallapop.com/search?category_id=17000&subcategory_ids=10215"
+    }
+  ],
+  "type": "consumer_goods",
+  "user": {
+    "id": "p8j3e0k4yyz9",
+    "is_top_profile": false
+  },
+  "slug": "bicicleta-electrica-turbo-fattie-1308863326",
+  "share_url": "https://wallapop.com/item/bicicleta-electrica-turbo-fattie-1308863326",
+  "modified_date": 1791107972,
+  "images": [
+    {
+      "id": "4z4ykrrmg8wz",
+      "average_color": "13C1AC",
+      "urls": {
+        "small": "https://cdn.wallapop.com/images/10420/ln/9h/__/c10420p1308863326/i6771798886.jpg?pictureSize=W320",
+        "medium": "https://cdn.wallapop.com/images/10420/ln/9h/__/c10420p1308863326/i6771798886.jpg?pictureSize=W640",
+        "big": "https://cdn.wallapop.com/images/10420/ln/9h/__/c10420p1308863326/i6771798886.jpg?pictureSize=W800"
+      }
+    }
+  ],
+  "price": {
+    "cash": {
+      "amount": 1000.0,
+      "currency": "EUR"
+    }
+  },
+  "location": {
+    "latitude": 41.4078384,
+    "longitude": 2.1486249,
+    "approximated": false,
+    "country_code": "ES",
+    "city": "Barcelona",
+    "postal_code": "08023"
+  },
+  "type_attributes": {
+    "condition": {
+      "value": "good",
+      "title": "Condition",
+      "text": "Good condition",
+      "icon_text": "Good condition"
+    }
+  },
+  "bump": {
+    "type": "city"
+  },
+  "supports_shipping": {
+    "flag": false
+  },
+  "shipping": {
+    "item_is_shippable": true,
+    "user_allows_shipping": false
+  },
+  "hashtags": {
+    "values": []
+  },
+  "favorited": {
+    "flag": false
+  },
+  "counters": {
+    "views": 227,
+    "favorites": 12,
+    "conversations": 3
+  },
+  "characteristics": {
+    "text": "Good condition",
+    "original": "Good condition"
+  },
+  "characteristics_details": []
+}

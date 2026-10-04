@@ -1,0 +1,14 @@
+---
+description: Extreme quality bar for walla (Korotkevich + Gray)
+alwaysApply: true
+---
+
+Before editing `walla/`, read:
+
+- `docs/code_quality.md` (Korotkevich / Tourist bar)
+- `docs/data_engineering_standards.md` (Gray / Stonebraker bar)
+- `docs/WIRE.md`
+
+Enforce: downward DAG, <=250 LOC/file, no import side effects, `mypy --strict`,
+no password/token in logs, fixture + parser test for wire changes.
+Run `python scripts/check_code_quality.py` and `pytest -q -m "not live"`.

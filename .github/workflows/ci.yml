@@ -1,0 +1,26 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: |
+          python -m pip install -U pip
+          pip install -e ".[dev,mcp]"
+      - name: Quality
+        run: |
+          python scripts/check_code_quality.py
+          ruff check .
+          mypy walla scripts/check_code_quality.py
+      - name: Tests
+        run: pytest -q -m "not live" --cov=walla --cov-fail-under=90

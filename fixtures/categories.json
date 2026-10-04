@@ -1,0 +1,49 @@
+{
+  "categories": [
+    {
+      "id": 100,
+      "name": "Cars",
+      "path": "",
+      "vertical_id": "cars",
+      "icon": "car",
+      "subcategories": [],
+      "category_leaf_selection_mandatory": false
+    },
+    {
+      "id": 14000,
+      "name": "Motorbike",
+      "path": "",
+      "vertical_id": "consumer_goods",
+      "icon": "motorbike",
+      "subcategories": [],
+      "category_leaf_selection_mandatory": false
+    },
+    {
+      "id": 12800,
+      "name": "Motors & accessories",
+      "path": "",
+      "vertical_id": "consumer_goods",
+      "icon": "helmet",
+      "subcategories": [],
+      "category_leaf_selection_mandatory": false
+    },
+    {
+      "id": 12465,
+      "name": "Fashion & accessories",
+      "path": "",
+      "vertical_id": "consumer_goods",
+      "icon": "t-shirt",
+      "subcategories": [],
+      "category_leaf_selection_mandatory": true
+    },
+    {
+      "id": 200,
+      "name": "Real Estate",
+      "path": "",
+      "vertical_id": "real_estate",
+      "icon": "house",
+      "subcategories": [],
+      "category_leaf_selection_mandatory": false
+    }
+  ]
+}

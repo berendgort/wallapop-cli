@@ -1,0 +1,182 @@
+{
+  "data": {
+    "section": {
+      "type": "organic_search_results",
+      "payload": {
+        "title": "Find what you want",
+        "items": [
+          {
+            "id": "pzpkpw831lj3",
+            "user_id": "p8j3e0k4yyz9",
+            "title": "Bicicleta El\u00e9ctrica Specialized  turbo levo Fattie",
+            "description": "Bicicleta el\u00e9ctrica tipo Fattie Talla L. Poco uso. Tija telescopica. No cambio solo presencial.\n\n- Ruedas anchas.\n- Horq",
+            "category_id": 17000,
+            "price": {
+              "amount": 1000.0,
+              "currency": "EUR"
+            },
+            "images": [
+              {
+                "id": "4z4ykrrmg8wz",
+                "average_color": "13C1AC",
+                "urls": {
+                  "small": "https://cdn.wallapop.com/images/10420/ln/9h/__/c10420p1308863326/i6771798886.jpg?pictureSize=W320",
+                  "medium": "https://cdn.wallapop.com/images/10420/ln/9h/__/c10420p1308863326/i6771798886.jpg?pictureSize=W640",
+                  "big": "https://cdn.wallapop.com/images/10420/ln/9h/__/c10420p1308863326/i6771798886.jpg?pictureSize=W800"
+                }
+              }
+            ],
+            "reserved": {
+              "flag": false
+            },
+            "location": {
+              "latitude": 41.4078384,
+              "longitude": 2.1486249,
+              "postal_code": "08023",
+              "city": "Barcelona",
+              "region": "Catalu\u00f1a",
+              "region2": "Barcelona",
+              "country_code": "ES"
+            },
+            "shipping": {
+              "item_is_shippable": true,
+              "user_allows_shipping": false
+            },
+            "favorited": {
+              "flag": false
+            },
+            "bump": {
+              "type": "city"
+            },
+            "web_slug": "bicicleta-electrica-turbo-fattie-1308863326",
+            "created_at": 1791049450387,
+            "modified_at": 1791107972742,
+            "taxonomy": [
+              {
+                "id": 17000,
+                "name": "Bikes",
+                "icon": "bike"
+              },
+              {
+                "id": 10056,
+                "name": "Bikes & tricycles",
+                "icon": null
+              },
+              {
+                "id": 10215,
+                "name": "Electric bikes",
+                "icon": null
+              }
+            ],
+            "is_favoriteable": {
+              "flag": true
+            },
+            "is_refurbished": {
+              "flag": false
+            },
+            "is_top_profile": {
+              "flag": false
+            },
+            "has_warranty": {
+              "flag": false
+            }
+          },
+          {
+            "id": "mzn35e8y40jn",
+            "user_id": "nzx5qvwx4162",
+            "title": "Bicicleta Decathlon Rockrider",
+            "description": "Bicicleta de monta\u00f1a Decathlon Rockrider Infantil en color verde gris\u00e1ceo.\n\n- Cuadro de aluminio.\n- Suspensi\u00f3n delantera",
+            "category_id": 17000,
+            "price": {
+              "amount": 50.0,
+              "currency": "EUR"
+            },
+            "images": [
+              {
+                "id": "nz0gd2p2p13j",
+                "average_color": "13C1AC",
+                "urls": {
+                  "small": "https://cdn.wallapop.com/images/10420/ln/hw/__/c10420p1309255497/i6774018951.jpg?pictureSize=W320",
+                  "medium": "https://cdn.wallapop.com/images/10420/ln/hw/__/c10420p1309255497/i6774018951.jpg?pictureSize=W640",
+                  "big": "https://cdn.wallapop.com/images/10420/ln/hw/__/c10420p1309255497/i6774018951.jpg?pictureSize=W800"
+                }
+              }
+            ],
+            "reserved": {
+              "flag": false
+            },
+            "location": {
+              "latitude": 41.40175280861486,
+              "longitude": 2.1437748843364557,
+              "postal_code": "08021",
+              "city": "Barcelona",
+              "region": "Catalu\u00f1a",
+              "region2": "Barcelona",
+              "country_code": "ES"
+            },
+            "shipping": {
+              "item_is_shippable": true,
+              "user_allows_shipping": false
+            },
+            "favorited": {
+              "flag": false
+            },
+            "bump": {
+              "type": "none"
+            },
+            "web_slug": "bicicleta-decathlon-rockrider-1309255497",
+            "created_at": 1791129906707,
+            "modified_at": 1791130001884,
+            "taxonomy": [
+              {
+                "id": 17000,
+                "name": "Bikes",
+                "icon": "bike"
+              },
+              {
+                "id": 10056,
+                "name": "Bikes & tricycles",
+                "icon": null
+              },
+              {
+                "id": 10214,
+                "name": "MTB",
+                "icon": null
+              }
+            ],
+            "is_favoriteable": {
+              "flag": true
+            },
+            "is_refurbished": {
+              "flag": false
+            },
+            "is_top_profile": {
+              "flag": false
+            },
+            "has_warranty": {
+              "flag": false
+            }
+          }
+        ],
+        "order": "most_relevance"
+      }
+    },
+    "tracking": {
+      "variant": null,
+      "location": {
+        "latitude": 41.3874,
+        "longitude": 2.1686,
+        "country_code": "ES"
+      },
+      "section": "organic_search_results",
+      "event": "search"
+    }
+  },
+  "meta": {
+    "next_page": "eyJhbGciOiJIUzI1NiJ9.fixture_next_page",
+    "next_section_type": "organic_search_results"
+  },
+  "stats": {
+    "filters_applied_count": 0
+  }
+}

@@ -11,8 +11,6 @@
   Dr. Berend Gort  ·  www.berendgort.dev
 ```
 
-![walla banner](docs/assets/walla-github-banner.jpg)
-
 ![walla demo](docs/assets/walla-demo.mp4)
 
 Demo music: [Raising Me Higher](https://mixkit.co/free-stock-music/raising-me-higher-34/) by Ahjay Stelino

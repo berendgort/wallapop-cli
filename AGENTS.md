@@ -60,4 +60,6 @@ Ranks: models 10 → exceptions 15 → http 20 → core 30 → search/account/hu
 - **Do** require `--yes` for say/offer.
 - **Don't** commit session.json, cookies, or tokens.
 - **Don't** invent wire shapes without a fixture.
+- **Don't** post buyer offers as `{item_id, amount, currency}` (HTTP 400).
+  Use `walla.account.offer_wire.build_offer_body` / `fixtures/offer_buyer_request.json`.
 - **Don't** require `.env` credentials; login is cookie paste.

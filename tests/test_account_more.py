@@ -138,15 +138,34 @@ def test_list_messages_and_send() -> None:
 
     class C(HttpClient):
         def request(self, method: str, path: str, **kwargs: Any) -> Any:  # type: ignore[override]
-            if method == "GET":
-                return {"messages": [{"id": "1", "text": "hi"}]}
-            return {"ok": True}
+            if path == "/bff/messaging/inbox":
+                return {
+                    "user_hash": "me",
+                    "conversations": [
+                        {
+                            "hash": "c1",
+                            "item": {"hash": "i1", "title": "Bike"},
+                            "with_user": {"hash": "u2", "name": "Ana"},
+                            "channel": "chat.u2.c1.me",
+                            "messages": {
+                                "messages": [{"id": "1", "text": "hi", "from_self": False}]
+                            },
+                        }
+                    ],
+                }
+            if path == "/api/v3/instant-messaging/token":
+                return {"token": "pn-token"}
+            return {}
 
     with patch("walla.account.inbox._auth_client", return_value=C()):
-        msgs = list_messages("c1")
-        assert msgs[0].text == "hi"
-        out = send_message("c1", "hola", confirm=True)
-        assert out["sent"] is True
+        with patch("walla.account.chat._auth_client", return_value=C()):
+            with patch("walla.account.chat.requests.get") as pn:
+                pn.return_value = MagicMock(status_code=200, text="[1,\"Sent\",\"0\"]")
+                msgs = list_messages("c1")
+                assert msgs[0].text == "hi"
+                out = send_message("c1", "hola", confirm=True)
+                assert out["sent"] is True
+                assert pn.called
 
 
 def test_list_messages_unsupported() -> None:
@@ -154,11 +173,11 @@ def test_list_messages_unsupported() -> None:
 
     class C(HttpClient):
         def request(self, method: str, path: str, **kwargs: Any) -> Any:  # type: ignore[override]
-            raise RuntimeError("fail")
+            return {"user_hash": "me", "conversations": []}
 
     with patch("walla.account.inbox._auth_client", return_value=C()):
         with pytest.raises(WallaUnsupportedError):
-            list_messages("c1")
+            list_messages("missing")
 
 
 def test_watches_roundtrip(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

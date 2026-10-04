@@ -109,14 +109,67 @@ def check_layers() -> list[str]:
     return bad
 
 
+def check_offer_fixture() -> list[str]:
+    """Keep offer wire constants in sync with fixtures/offer_buyer_request.json."""
+    import json
+
+    wire = ROOT / "walla" / "account" / "offer_wire.py"
+    if not wire.is_file():
+        return ["walla/account/offer_wire.py missing"]
+    tree = ast.parse(wire.read_text(encoding="utf-8"))
+    consts: dict[str, tuple[str, ...]] = {}
+    for node in tree.body:
+        if not isinstance(node, ast.Assign) or len(node.targets) != 1:
+            continue
+        target = node.targets[0]
+        if not isinstance(target, ast.Name):
+            continue
+        if target.id not in ("REQUIRED_OFFER_KEYS", "FORBIDDEN_OFFER_KEYS"):
+            continue
+        if not isinstance(node.value, ast.Tuple):
+            continue
+        vals: list[str] = []
+        for elt in node.value.elts:
+            if isinstance(elt, ast.Constant) and isinstance(elt.value, str):
+                vals.append(elt.value)
+        consts[target.id] = tuple(vals)
+    required = consts.get("REQUIRED_OFFER_KEYS")
+    forbidden = consts.get("FORBIDDEN_OFFER_KEYS")
+    if not required or not forbidden:
+        return ["offer_wire.py missing REQUIRED/FORBIDDEN tuples"]
+    path = ROOT / "fixtures" / "offer_buyer_request.json"
+    if not path.is_file():
+        return ["fixtures/offer_buyer_request.json missing"]
+    meta = json.loads(path.read_text(encoding="utf-8"))
+    bad: list[str] = []
+    if tuple(meta.get("required_keys") or ()) != required:
+        bad.append("offer fixture required_keys != offer_wire.REQUIRED_OFFER_KEYS")
+    if tuple(meta.get("forbidden_keys") or ()) != forbidden:
+        bad.append("offer fixture forbidden_keys != offer_wire.FORBIDDEN_OFFER_KEYS")
+    example = meta.get("example") or {}
+    for k in forbidden:
+        if k in example:
+            bad.append(f"offer fixture example contains forbidden key {k}")
+    for k in required:
+        if k not in example:
+            bad.append(f"offer fixture example missing {k}")
+    return bad
+
+
 def main() -> int:
-    errors = check_loc() + check_emdash() + check_print() + check_layers()
+    errors = (
+        check_loc()
+        + check_emdash()
+        + check_print()
+        + check_layers()
+        + check_offer_fixture()
+    )
     if errors:
         print("FAILED code quality:")
         for e in errors:
             print(f"  {e}")
         return 1
-    print("OK: LOC<=250, no em-dash, no bare print, layer DAG")
+    print("OK: LOC<=250, no em-dash, no bare print, layer DAG, offer wire")
     return 0
 
 

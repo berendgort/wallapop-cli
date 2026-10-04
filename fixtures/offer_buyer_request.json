@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "path": "/api/v3/delivery/buyer/offers",
+  "method": "POST",
+  "required_keys": [
+    "offer_id",
+    "offer_price_amount",
+    "offer_price_currency",
+    "item_ids"
+  ],
+  "forbidden_keys": ["item_id", "amount", "currency"],
+  "example": {
+    "offer_id": "00000000-0000-4000-8000-000000000001",
+    "offer_price_amount": 650,
+    "offer_price_currency": "EUR",
+    "item_ids": ["wzv48vgrmdzl"]
+  },
+  "notes": "Old {item_id, amount, currency} returns HTTP 400. Never invent without this fixture."
+}

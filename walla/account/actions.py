@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-import uuid
 from typing import Any
 
 from walla.account.login import ensure_access_token
+from walla.account.offer_wire import build_offer_body
 from walla.core.exceptions import WallaUnsupportedError
 from walla.http.client import HttpClient
 from walla.hunter.profile_store import load_profile
@@ -117,29 +117,28 @@ def make_offer(
             f"In-person listing outside pickup radius ({item.title}). Refuse offer."
         )
     http = client or _auth_client()
-    offer_id = str(uuid.uuid4())
+    body = build_offer_body(item_id, offer_eur)
     try:
         raw = http.post(
             "/api/v3/delivery/buyer/offers",
-            json_body={
-                "offer_id": offer_id,
-                "offer_price_amount": offer_eur,
-                "offer_price_currency": "EUR",
-                "item_ids": [item_id],
-            },
+            json_body=body,
             auth=True,
         )
         return {
             "sent": True,
-            "offer_id": offer_id,
+            "offer_id": body["offer_id"],
             "quote": quote.model_dump(mode="json"),
             "title": item.title,
             "response": raw,
         }
     except Exception as exc:
         msg = str(exc)
-        if "409" in msg:
-            raise WallaUnsupportedError("Seller disabled offers (409).") from exc
+        if "409" in msg or "offer creation not allowed" in msg.lower():
+            raise WallaUnsupportedError(
+                "Seller disabled formal offers (409). "
+                "Open chat and send the price in text: "
+                f'walla say {item_id} "… te propongo {offer_eur} € …" --yes'
+            ) from exc
         raise WallaUnsupportedError(
             f"Offer wire failed ({exc}). Capture POST buyer/offers and update WIRE.md."
         ) from exc

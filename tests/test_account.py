@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from walla.account.actions import quote_offer
-from walla.account.inbox import _extract_list, _extract_messages, list_conversations
+from walla.account.inbox import list_conversations, list_messages
 from walla.account.login import login_password
 from walla.core.exceptions import WallaAuthError, WallaUnsupportedError
 from walla.http.client import HttpClient
@@ -35,36 +35,33 @@ def test_quote_offer_totals(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
     assert q.within_pickup is True
 
 
-def test_extract_conversations() -> None:
-    rows = _extract_list({"data": {"conversations": [{"id": "c1", "unread": 2}]}})
-    assert rows[0]["id"] == "c1"
-
-
-def test_extract_messages() -> None:
-    msgs = _extract_messages({"messages": [{"id": "m1", "text": "hola", "from_self": True}]})
-    assert msgs is not None
-    assert msgs[0].text == "hola"
-
-
-def test_list_conversations_mock() -> None:
+def test_list_conversations_bff_mock() -> None:
     class C(HttpClient):
         def request(self, method: str, path: str, **kwargs: Any) -> Any:  # type: ignore[override]
+            assert path == "/bff/messaging/inbox"
             return {
+                "user_hash": "me",
                 "conversations": [
                     {
-                        "id": "c1",
-                        "item": {"id": "i1", "title": "Bike"},
-                        "user": {"micro_name": "Ana"},
-                        "unread_count": 1,
-                        "last_message": {"text": "hola"},
+                        "hash": "c1",
+                        "item": {"hash": "i1", "title": "Bike"},
+                        "with_user": {"hash": "u2", "name": "Ana"},
+                        "unread_messages": 1,
+                        "channel": "chat.u2.c1.me",
+                        "messages": {
+                            "messages": [{"id": "m1", "text": "hola", "from_self": False}]
+                        },
                     }
-                ]
+                ],
             }
 
     with patch("walla.account.inbox._auth_client", return_value=C()):
         rows = list_conversations()
+        msgs = list_messages("c1")
     assert rows[0].id == "c1"
     assert rows[0].item_title == "Bike"
+    assert rows[0].other_user == "Ana"
+    assert msgs[0].text == "hola"
 
 
 def test_login_password_missing_args() -> None:

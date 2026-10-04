@@ -36,7 +36,9 @@ walla setup --lat 41.39 --lon 2.17 --km 30 --budget 400 \
    every `https://es.wallapop.com/item/…` URL. Never summarize without links.
 3. One GRAB → `walla negotiate <id> --json`. Several GRABs → ask human to pick an id.
 4. Show opening + offer_eur + walk_away. Human approves text and EUR.
-5. Only then: `walla say … --yes` or `walla offer … --eur N --yes`
-6. **Stop.** Human pays or meets in the Wallapop app. `--yes` never means buy.
+5. Open chat if needed: `walla chat <item_id> --json` (listing Chat button).
+6. Only then: `walla say <item_id> "…" --yes` and/or `walla offer … --eur N --yes`
+   If offer returns 409 (seller disabled offers), put the EUR in the chat text.
+7. **Stop.** Human pays or meets in the Wallapop app. `--yes` never means buy.
 
 Reads and negotiate drafts are safe. Sends need confirm.

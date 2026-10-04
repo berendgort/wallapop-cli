@@ -44,13 +44,17 @@ login ever succeeds.
 
 ## Messaging / offers (auth)
 
-Reported shapes (confirm with a live token before trusting writes):
-
-- Inbox: `GET /api/v3/conversations`
-- Messages: `GET|POST /api/v3/conversations/{id}/messages`
+- Open chat (listing **Chat** button): `POST /api/v3/conversations`
+  body `{ "item_id": "<hash>" }` → `{ conversation_id, item_id, other_user_id, channel }`.
+- Inbox: `GET /bff/messaging/inbox?page_size=&max_messages=` (not `/api/v3/conversations`, 405).
+- Send text: PubNub publish after `GET /api/v3/instant-messaging/token`
+  (REST `…/messages` is 404). See `walla.account.chat.publish_text`.
 - Offers: `POST /api/v3/delivery/buyer/offers` with
   `{offer_id, offer_price_amount, offer_price_currency, item_ids}`.
-  `offer_id` is a client UUID. `item_ids` is a one-element list of the listing id.
+  Requires header `X-AppVersion` (without it Wallapop returns a generic HTTP 400).
+  Fixture: `fixtures/offer_buyer_request.json`. The old
+  `{item_id, amount, currency}` body returns **HTTP 400** — forbidden.
+  Some sellers disable offers → **409** `offer creation not allowed`; fall back to chat text.
 - Favorites: `/api/v3/users/me/favorites`, `/api/v3/items/{id}/favorite`
 
 Writes that fail closed as `error_type: unsupported` until fixtures exist.

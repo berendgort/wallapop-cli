@@ -14,6 +14,7 @@ from walla.account.actions import (
     quote_offer,
     remove_favorite,
 )
+from walla.account.chat import open_conversation
 from walla.account.inbox import list_conversations, list_messages, send_message
 from walla.account.login import login_cookie_text, login_cookies, whoami
 from walla.account.prompt import interactive_login, session_summary
@@ -89,15 +90,36 @@ def register(app: typer.Typer) -> None:
 
         run_cmd(_run, as_json=json)
 
+    @app.command("chat")
+    def chat_cmd(
+        item_id: str = typer.Argument(...),
+        json: bool = typer.Option(False, "--json"),
+    ) -> None:
+        """Open chat on a listing (same as the Chat button). Never sends text."""
+
+        def _run() -> dict[str, Any]:
+            return open_conversation(item_id)
+
+        run_cmd(_run, as_json=json)
+
     @app.command("say")
     def say_cmd(
-        conversation_id: str = typer.Argument(...),
+        target: str = typer.Argument(..., help="Item id or conversation hash"),
         text: str = typer.Argument(...),
         yes: bool = typer.Option(False, "--yes"),
         json: bool = typer.Option(False, "--json"),
     ) -> None:
+        """Send chat text. Opens conversation first when given an item id."""
+
         def _run() -> dict[str, Any]:
-            return send_message(conversation_id, text, confirm=yes)
+            if not yes:
+                return {
+                    "needs_confirm": True,
+                    "target": target,
+                    "text": text,
+                    "hint": "Re-run with --yes to send",
+                }
+            return send_message(target, text, confirm=True)
 
         run_cmd(_run, as_json=json)
 

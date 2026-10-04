@@ -11,6 +11,7 @@ from walla.models.account import Conversation, Message
 
 __all__ = (
     "list_conversations",
+    "list_conversations_raw",
     "list_messages",
     "send_message",
 )
@@ -21,36 +22,51 @@ def _auth_client() -> HttpClient:
     return HttpClient(access_token=sess.access_token, device_id=sess.device_id)
 
 
-def list_conversations(*, client: HttpClient | None = None) -> list[Conversation]:
+def list_conversations_raw(*, client: HttpClient | None = None) -> dict[str, Any]:
     http = client or _auth_client()
-    raw = http.get("/api/v3/conversations", params={"max_messages": 1}, auth=True)
-    rows = _extract_list(raw)
+    raw = http.get(
+        "/bff/messaging/inbox",
+        params={"page_size": 30, "max_messages": 30},
+        auth=True,
+    )
+    if not isinstance(raw, dict):
+        raise WallaUnsupportedError("Inbox BFF returned non-object.")
+    return raw
+
+
+def list_conversations(*, client: HttpClient | None = None) -> list[Conversation]:
+    raw = list_conversations_raw(client=client)
     out: list[Conversation] = []
-    for row in rows:
+    for row in raw.get("conversations") or []:
         if not isinstance(row, dict):
             continue
-        cid = str(row.get("id") or row.get("conversation_id") or "")
+        cid = str(row.get("hash") or row.get("id") or "")
         if not cid:
             continue
-        item = row.get("item") or row.get("product") or {}
-        user = row.get("user") or row.get("other_user") or {}
-        last = row.get("last_message") or row.get("messages") or {}
+        item = row.get("item") or {}
+        user = row.get("with_user") or row.get("user") or {}
+        msgs = row.get("messages") or {}
         last_text = None
-        if isinstance(last, dict):
-            last_text = last.get("text") or last.get("message")
-        elif isinstance(last, list) and last:
-            last_text = last[0].get("text") if isinstance(last[0], dict) else None
+        if isinstance(msgs, dict):
+            inner = msgs.get("messages") or []
+            if isinstance(inner, list) and inner and isinstance(inner[0], dict):
+                last_text = inner[0].get("text")
         out.append(
             Conversation(
                 id=cid,
-                item_id=str(item.get("id")) if isinstance(item, dict) and item.get("id") else None,
+                item_id=(
+                    str(item.get("hash") or item.get("id"))
+                    if isinstance(item, dict)
+                    and (item.get("hash") or item.get("id"))
+                    else None
+                ),
                 item_title=item.get("title") if isinstance(item, dict) else None,
                 other_user=(
-                    user.get("micro_name") or user.get("name")
+                    user.get("name") or user.get("micro_name")
                     if isinstance(user, dict)
                     else None
                 ),
-                unread=int(row.get("unread_count") or row.get("unread") or 0),
+                unread=int(row.get("unread_messages") or row.get("unread") or 0),
                 last_message=str(last_text) if last_text else None,
             )
         )
@@ -58,90 +74,78 @@ def list_conversations(*, client: HttpClient | None = None) -> list[Conversation
 
 
 def list_messages(conversation_id: str, *, client: HttpClient | None = None) -> list[Message]:
-    http = client or _auth_client()
-    # Try common shapes; first success wins.
-    for path in (
-        f"/api/v3/conversations/{conversation_id}/messages",
-        f"/api/v3/conversations/{conversation_id}",
-    ):
-        try:
-            raw = http.get(path, auth=True)
-        except Exception:  # noqa: BLE001
+    raw = list_conversations_raw(client=client)
+    for row in raw.get("conversations") or []:
+        if not isinstance(row, dict):
             continue
-        rows = _extract_messages(raw)
-        if rows is not None:
-            return rows
+        if str(row.get("hash") or "") != conversation_id:
+            continue
+        msgs = row.get("messages") or {}
+        inner: list[Any] = []
+        if isinstance(msgs, dict):
+            inner = cast(list[Any], msgs.get("messages") or [])
+        elif isinstance(msgs, list):
+            inner = msgs
+        out: list[Message] = []
+        for m in inner:
+            if not isinstance(m, dict):
+                continue
+            out.append(
+                Message(
+                    id=str(m["id"]) if m.get("id") else None,
+                    text=str(m.get("text") or ""),
+                    from_self=bool(m.get("from_self")),
+                    created_at=m.get("timestamp") or m.get("created_at"),
+                )
+            )
+        return out
     raise WallaUnsupportedError(
-        "Message thread wire not confirmed for this account. "
-        "Capture GET conversation messages and update docs/WIRE.md."
+        f"Conversation {conversation_id} not in inbox. "
+        "Open chat first: walla chat <item_id> --json"
     )
 
 
 def send_message(
-    conversation_id: str,
+    target: str,
     text: str,
     *,
     confirm: bool = False,
     client: HttpClient | None = None,
 ) -> dict[str, Any]:
+    """Send chat text. ``target`` is an item id or conversation hash."""
     if not confirm:
         raise ValueError("send requires confirm=True / --yes")
+    from walla.account.chat import publish_text, resolve_conversation
+
     http = client or _auth_client()
-    try:
-        raw = http.post(
-            f"/api/v3/conversations/{conversation_id}/messages",
-            json_body={"text": text, "message": text},
-            auth=True,
-        )
-        return {"sent": True, "conversation_id": conversation_id, "response": raw}
-    except Exception as exc:
+    opened = resolve_conversation(target, client=http)
+    channel = opened.get("channel")
+    from_user = opened.get("user_hash") or ""
+    to_user = opened.get("other_user_id") or ""
+    cid = str(opened["conversation_id"])
+    if not channel or not from_user or not to_user:
+        # reopen create endpoint for channel + other_user
+        from walla.account.chat import open_conversation
+
+        item_id = opened.get("item_id") or target
+        opened = open_conversation(str(item_id), client=http)
+        channel = opened.get("channel")
+        to_user = opened.get("other_user_id") or ""
+        cid = str(opened["conversation_id"])
+        raw = list_conversations_raw(client=http)
+        from_user = str(raw.get("user_hash") or "")
+    if not channel or not from_user or not to_user:
         raise WallaUnsupportedError(
-            f"Send wire failed ({exc}). Capture POST messages and update docs/WIRE.md."
-        ) from exc
-
-
-def _extract_list(raw: Any) -> list[Any]:
-    if isinstance(raw, list):
-        return raw
-    if not isinstance(raw, dict):
-        return []
-    for key in ("conversations", "data", "items"):
-        val = raw.get(key)
-        if isinstance(val, list):
-            return val
-        if isinstance(val, dict):
-            for k2 in ("conversations", "items", "list"):
-                if isinstance(val.get(k2), list):
-                    return cast(list[Any], val[k2])
-    return []
-
-
-def _extract_messages(raw: Any) -> list[Message] | None:
-    rows: list[Any] | None = None
-    if isinstance(raw, list):
-        rows = raw
-    elif isinstance(raw, dict):
-        for key in ("messages", "data", "items"):
-            val = raw.get(key)
-            if isinstance(val, list):
-                rows = val
-                break
-            if isinstance(val, dict) and isinstance(val.get("messages"), list):
-                rows = val["messages"]
-                break
-    if rows is None:
-        return None
-    out: list[Message] = []
-    for row in rows:
-        if not isinstance(row, dict):
-            continue
-        text = row.get("text") or row.get("message") or ""
-        out.append(
-            Message(
-                id=str(row["id"]) if row.get("id") else None,
-                text=str(text),
-                from_self=bool(row.get("from_self") or row.get("mine")),
-                created_at=row.get("created_at") or row.get("timestamp"),
-            )
+            "Chat missing channel/users after open. Capture conversation create."
         )
-    return out
+    sent = publish_text(
+        channel=str(channel),
+        conversation_id=cid,
+        from_user_hash=from_user,
+        to_user_hash=str(to_user),
+        text=text,
+        client=http,
+    )
+    sent["item_id"] = opened.get("item_id")
+    sent["chat_url"] = opened.get("chat_url")
+    return sent

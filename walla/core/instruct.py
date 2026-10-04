@@ -59,12 +59,18 @@ def instruct_recipe() -> dict[str, Any]:
                 },
                 {
                     "step": "say",
-                    "agent": "never alone",
+                    "agent": (
+                        "never alone. walla chat <item_id> opens the listing Chat "
+                        "button. walla say <item_id_or_conv> \"…\" --yes sends text."
+                    ),
                     "ask_human": "yes to that exact text, then walla say --yes",
                 },
                 {
                     "step": "offer",
-                    "agent": "never alone; refuse if EUR > budget",
+                    "agent": (
+                        "never alone; refuse if EUR > budget. "
+                        "On 409 offer-disabled: send the EUR in chat text instead."
+                    ),
                     "ask_human": "yes to that exact EUR, then walla offer --yes",
                 },
                 {
@@ -106,10 +112,11 @@ def instruct_recipe() -> dict[str, Any]:
                 "walla item <id> --json",
             ],
             "talk": [
+                "walla chat <item_id> --json",
                 "walla negotiate <id> --json",
                 "walla inbox --json",
                 "walla thread <id> --json",
-                "walla say <id> <text> --yes",
+                'walla say <item_or_conv> "…" --yes',
             ],
             "offer": [
                 "walla negotiate <id> --json",

@@ -22,10 +22,11 @@ def new_device_id() -> str:
 def default_headers(*, device_id: str | None = None) -> dict[str, str]:
     did = device_id or new_device_id()
     return {
-        "Accept": "application/json",
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "es-ES,es;q=0.9,en;q=0.8",
         "User-Agent": (
             "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-            "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
         ),
         "Origin": WEB_BASE,
         "Referer": f"{WEB_BASE}/",
@@ -33,4 +34,6 @@ def default_headers(*, device_id: str | None = None) -> dict[str, str]:
         "DeviceOS": "0",
         "X-DeviceID": did,
         "DeviceID": did,
+        # Without X-AppVersion, buyer/offers returns a generic HTTP 400.
+        "X-AppVersion": "825980",
     }

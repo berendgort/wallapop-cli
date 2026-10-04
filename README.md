@@ -11,7 +11,9 @@
   Dr. Berend Gort  ·  www.berendgort.dev
 ```
 
-![walla demo](docs/assets/walla-demo.mp4)
+<video src="https://github.com/berendgort/wallapop-cli/releases/download/demo/walla-demo.mp4" controls width="100%" poster="docs/assets/walla-demo-poster.jpg"></video>
+
+[Watch the sell demo](https://github.com/berendgort/wallapop-cli/releases/download/demo/walla-demo.mp4)
 
 Demo music: [Funkee Monkeee](https://mixkit.co/free-stock-music/funkee-monkeee-1140/) by Michael Ramir C.
 ([Mixkit Stock Music Free License](https://mixkit.co/license/#musicFree)).

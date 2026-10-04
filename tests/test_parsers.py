@@ -36,3 +36,5 @@ def test_parse_categories_fixture() -> None:
     assert len(cats) >= 1
     assert cats[0].id
     assert cats[0].name
+    hogar = next(c for c in cats if c.id == 12467)
+    assert any(s.name == "Muebles y organización" for s in hogar.subcategories)

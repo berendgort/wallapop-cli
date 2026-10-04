@@ -131,9 +131,10 @@ def instruct_recipe() -> dict[str, Any]:
                 "walla offer <id> --eur <n> --yes",
             ],
             "sell": [
+                "walla categories --find <name> --json",
                 "walla sell <photo.jpg>… --json  # returns questions",
                 "walla sell <photos> --title … --desc … --eur N "
-                "--category <leaf> --root <root> --yes",
+                "--category <leaf-or-name> [--root <root>] --yes",
                 "walla unsell <item_id> --yes",
             ],
         },

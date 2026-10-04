@@ -51,11 +51,14 @@ SELL_QUESTIONS = (
     },
     {
         "id": "category_leaf_id",
-        "ask": "Leaf category id (string). Use walla categories --json to pick.",
+        "ask": (
+            "Category leaf id OR name tokens (e.g. 24208 or escritorio). "
+            "Root is auto-derived. Preview: walla categories --find …"
+        ),
     },
     {
         "id": "root_category_id",
-        "ask": "Root category id (string), e.g. 12579 for Deporte y ocio.",
+        "ask": "Root category id (optional if leaf/name resolves).",
     },
     {
         "id": "shipping",

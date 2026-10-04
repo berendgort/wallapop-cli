@@ -13,6 +13,7 @@ license: MIT
 Do not ask the human to type buyer replies. Desk sends those.
 
 ```bash
+walla categories --find escritorio --json
 walla sell ./shot1.jpg ./shot2.jpg --json
 ```
 
@@ -21,13 +22,13 @@ Ask every question in `data.questions`, then publish once:
 ```bash
 walla sell ./shot1.jpg ./shot2.jpg \
   --title "…" --desc "…" --eur 40 \
-  --category 10105 --root 12579 --condition good \
+  --category escritorio --condition good \
   --floor 35 --yes --json
 ```
 
-`--floor` is the lowest EUR desk may accept. Omit it to hold the asking price.
-Category ids come from `walla categories --json`.
-
+`--category` accepts a leaf id **or** name tokens (`escritorio`, `hogar/muebles`).
+`--root` is optional (derived from the leaf). `--floor` is the lowest EUR desk may
+accept. Omit it to hold the asking price.
 Then:
 
 ```bash

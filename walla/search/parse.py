@@ -135,16 +135,20 @@ def parse_categories(payload: dict[str, Any]) -> list[Category]:
     cats = payload.get("categories") or payload.get("data") or []
     if not isinstance(cats, list):
         raise WallaParseError("categories missing")
-    out: list[Category] = []
-    for c in cats:
-        if not isinstance(c, dict):
-            continue
-        out.append(
-            Category(
-                id=int(c["id"]),
-                name=str(c.get("name") or ""),
-                icon=c.get("icon"),
-                vertical_id=c.get("vertical_id"),
-            )
-        )
-    return out
+    return [_parse_category_node(c) for c in cats if isinstance(c, dict)]
+
+
+def _parse_category_node(raw: dict[str, Any]) -> Category:
+    kids_raw = raw.get("subcategories") or []
+    kids: list[Category] = []
+    if isinstance(kids_raw, list):
+        kids = [_parse_category_node(c) for c in kids_raw if isinstance(c, dict)]
+    return Category(
+        id=int(raw["id"]),
+        name=str(raw.get("name") or ""),
+        icon=raw.get("icon") if isinstance(raw.get("icon"), str) else None,
+        vertical_id=(
+            str(raw["vertical_id"]) if raw.get("vertical_id") is not None else None
+        ),
+        subcategories=kids,
+    )

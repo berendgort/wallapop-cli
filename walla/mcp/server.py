@@ -83,10 +83,32 @@ def build_server() -> Any:
         return _wrap(_run)
 
     @mcp.tool()
-    def categories() -> dict[str, Any]:
-        return _wrap(
-            lambda: {"categories": [c.model_dump(mode="json") for c in get_categories()]}
-        )
+    def categories(find: str | None = None) -> dict[str, Any]:
+        """List the category tree, or find leaf/root ids by name tokens."""
+
+        def _run() -> dict[str, Any]:
+            from walla.search.category_find import find_categories
+
+            cats = get_categories()
+            if find:
+                hits = find_categories(cats, find)
+                return {
+                    "query": find,
+                    "count": len(hits),
+                    "matches": [
+                        {
+                            "leaf_id": h.leaf_id,
+                            "root_id": h.root_id,
+                            "path": h.path,
+                            "name": h.name,
+                            "is_leaf": h.is_leaf,
+                        }
+                        for h in hits[:40]
+                    ],
+                }
+            return {"categories": [c.model_dump(mode="json") for c in cats]}
+
+        return _wrap(_run)
 
     @mcp.tool()
     def login(cookie: str) -> dict[str, Any]:

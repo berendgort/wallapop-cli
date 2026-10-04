@@ -29,7 +29,10 @@ Public URL: `https://es.wallapop.com/item/<web_slug>`.
 
 ## Categories
 
-`GET https://api.wallapop.com/api/v3/categories` — top-level tree.
+`GET https://api.wallapop.com/api/v3/categories` — nested tree
+(`subcategories[]`). CLI: `walla categories --find escritorio --json` returns
+`leaf_id` + `root_id`. Sell accepts `--category <leaf-or-name>`; `--root` is
+optional.
 
 ## Auth
 

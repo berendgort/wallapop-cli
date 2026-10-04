@@ -20,6 +20,7 @@ class Category(BaseModel):
     name: str
     icon: str | None = None
     vertical_id: str | None = None
+    subcategories: list[Category] = Field(default_factory=list)
 
 
 class Profile(BaseModel):

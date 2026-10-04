@@ -10,39 +10,49 @@
       "category_leaf_selection_mandatory": false
     },
     {
-      "id": 14000,
-      "name": "Motorbike",
+      "id": 12467,
+      "name": "Hogar y jardín",
       "path": "",
       "vertical_id": "consumer_goods",
-      "icon": "motorbike",
-      "subcategories": [],
+      "icon": "home",
+      "subcategories": [
+        {
+          "id": 10125,
+          "name": "Muebles y organización",
+          "parent_id": 12467,
+          "subcategories": [
+            {
+              "id": 24207,
+              "name": "Mesas y mesitas",
+              "parent_id": 10125,
+              "subcategories": [
+                {
+                  "id": 24208,
+                  "name": "Escritorios",
+                  "parent_id": 24207,
+                  "subcategories": []
+                }
+              ]
+            }
+          ]
+        }
+      ],
       "category_leaf_selection_mandatory": false
     },
     {
-      "id": 12800,
-      "name": "Motors & accessories",
+      "id": 12579,
+      "name": "Deporte y ocio",
       "path": "",
       "vertical_id": "consumer_goods",
-      "icon": "helmet",
-      "subcategories": [],
-      "category_leaf_selection_mandatory": false
-    },
-    {
-      "id": 12465,
-      "name": "Fashion & accessories",
-      "path": "",
-      "vertical_id": "consumer_goods",
-      "icon": "t-shirt",
-      "subcategories": [],
-      "category_leaf_selection_mandatory": true
-    },
-    {
-      "id": 200,
-      "name": "Real Estate",
-      "path": "",
-      "vertical_id": "real_estate",
-      "icon": "house",
-      "subcategories": [],
+      "icon": "ball",
+      "subcategories": [
+        {
+          "id": 10105,
+          "name": "Surf y bodyboard",
+          "parent_id": 12579,
+          "subcategories": []
+        }
+      ],
       "category_leaf_selection_mandatory": false
     }
   ]

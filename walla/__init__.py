@@ -1,4 +1,4 @@
-"""walla - Wallapop.es look · offer · talk."""
+"""walla - Wallapop.es look · offer · talk · sell."""
 
 from __future__ import annotations
 

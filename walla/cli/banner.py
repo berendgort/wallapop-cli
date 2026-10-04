@@ -22,9 +22,13 @@ _TAG = "italic #D9F99D"
 _CREDIT = "#84CC16"
 _HOOK = "#BEF264"
 
-_EXAMPLE = (
-    'Example: "Find a used kite near Barcelona under 400eur, '
-    'message the seller, offer if it is a GRAB."'
+_PITCH = (
+    "Turns Claude, GPT, or Cursor into a Wallapop helper that "
+    "actually does the work for you. Drop a few photos and answer "
+    "a couple of questions; the agent publishes. When buyers message, "
+    "it reads the chats, replies, and negotiates down to your minimum "
+    "price, then shows you the best deal. You only open the Wallapop "
+    "app to accept. No typing chats. No babysitting the inbox."
 )
 _INSTALL = (
     "Install: pipx install 'walla-cli[mcp]'  "
@@ -33,19 +37,19 @@ _INSTALL = (
 
 
 def print_banner() -> None:
-    """Always emit example + install (agents often have no TTY)."""
+    """Always emit pitch + install (agents often have no TTY)."""
     if console.is_terminal:
         console.print()
         for row in _BANNER_ROWS:
             console.print(Text(row, style=_STYLE))
-        console.print(Text("  look · offer · talk", style=_TAG))
+        console.print(Text("  look · offer · talk · sell", style=_TAG))
         console.print(Text("  Dr. Berend Gort  ·  www.berendgort.dev", style=_CREDIT))
         console.print()
-        console.print(Text(f"  {_EXAMPLE}", style=_HOOK))
+        console.print(Text(f"  {_PITCH}", style=_HOOK))
         console.print(Text(f"  {_INSTALL}", style=_CREDIT))
         console.print()
         return
     # Non-TTY (agents/pipes): plain lines only, no box art.
-    console.print("walla - look · offer · talk")
-    console.print(_EXAMPLE)
+    console.print("walla - look · offer · talk · sell")
+    console.print(_PITCH)
     console.print(_INSTALL)

@@ -16,10 +16,15 @@
 Demo music: [Raising Me Higher](https://mixkit.co/free-stock-music/raising-me-higher-34/) by Ahjay Stelino
 ([Mixkit Stock Music Free License](https://mixkit.co/license/#musicFree)).
 
-**walla** is an unofficial Wallapop.es **CLI + MCP + Python library** for Cursor
-agents and humans: search listings, negotiate, publish a listing, and follow the inbox.
+**walla** turns Claude, GPT, or Cursor into a Wallapop helper that actually
+*does* the work for you. You drop a few photos and answer a couple of
+questions; the agent publishes the listing. When buyers message, it reads
+the chats, replies for you, and negotiates down to your minimum price —
+then shows you the best deal. You only open the Wallapop app to accept.
+No typing chats. No babysitting the inbox.
 
-Not affiliated with Wallapop. Respect ToS and rate limits.
+Unofficial Wallapop.es CLI + MCP + Python library. Not affiliated with
+Wallapop. Respect ToS and rate limits.
 
 ### What this unlocks
 

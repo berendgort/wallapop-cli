@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from walla.account.actions import make_offer, quote_offer
+from walla.account.desk import run_desk, run_pursue
 from walla.account.inbox import list_conversations, list_messages, send_message
 from walla.account.login import login_cookie_text, whoami
 from walla.core.envelope import error_payload, success_payload
@@ -137,6 +138,16 @@ def build_server() -> Any:
             return make_offer(item_id, eur, confirm=True)
 
         return _wrap(_run)
+
+    @mcp.tool()
+    def pursue(keywords: str, wave: int = 5) -> dict[str, Any]:
+        """Search and message sellers. Does not ask before each text. Does not pay."""
+        return _wrap(lambda: run_pursue(keywords, wave=wave))
+
+    @mcp.tool()
+    def desk() -> dict[str, Any]:
+        """One inbox pass: answer threads and summarize the best agreed price."""
+        return _wrap(run_desk)
 
     @mcp.tool()
     def me() -> dict[str, Any]:

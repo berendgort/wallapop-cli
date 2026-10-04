@@ -57,6 +57,30 @@ login ever succeeds.
   Some sellers disable offers → **409** `offer creation not allowed`; fall back to chat text.
 - Favorites: `/api/v3/users/me/favorites`, `/api/v3/items/{id}/favorite`
 
+## Sell / Vender (auth)
+
+Browser: `https://es.wallapop.com/app/catalog/upload/consumer-goods`.
+
+1. `POST /api/v3/steps` `{mode:{action:"upload",id:<uuid>}}` → step `title`
+2. `POST /api/v3/steps` `current_step=title` draft `{title}` → `photo`
+3. `POST /api/v3/upload/{upload_id}/pictures` multipart `file` → **204**
+4. `POST /api/v3/steps` `current_step=photo` → `category`
+5. `POST /api/v3/steps` `current_step=category` draft
+   `{title, category_leaf_id, root_category_id}` (**ids as strings**) → `loading`
+6. Poll `GET /api/v3/suggested-item-data/{upload_id}` (404 then empty 200)
+7. `POST /api/v3/steps` `current_step=loading` → `listing`
+8. Create: `POST /api/v3/items` multipart `image` + `item` (JSON string).
+   Header **`Accept: application/vnd.upload-v2+json`** (without it → HTTP 405).
+   Extra photos: `POST /api/v3/items/{id}/picture2` multipart `image` + `order`.
+9. Delete: `DELETE /api/v3/items/{id}` → 204.
+
+Fixture: `fixtures/sell_item_request.json` / `walla.account.sell_wire.build_item_body`.
+
+Every CLI call (method, path, auth, body) is listed in `fixtures/wire_contracts.json`.
+`scripts/check_code_quality.py` fails if `walla/account`, `walla/search`, or `walla/http`
+grows a `/api/` or `/bff/` literal that the catalog does not list.
+CLI: `walla sell photo.jpg … --yes` (draft without `--yes`).
+
 Writes that fail closed as `error_type: unsupported` until fixtures exist.
 
 ## Rate limits

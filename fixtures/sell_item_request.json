@@ -1,0 +1,51 @@
+{
+  "endpoint": "POST /api/v3/items",
+  "content_type": "multipart/form-data",
+  "accept": "application/vnd.upload-v2+json",
+  "fields": {
+    "image": "first JPEG/PNG/WebP file",
+    "item": "JSON string (see example)"
+  },
+  "steps": [
+    "POST /api/v3/steps mode.upload",
+    "POST /api/v3/steps current_step=title draft.title",
+    "POST /api/v3/upload/{upload_id}/pictures multipart file",
+    "POST /api/v3/steps current_step=photo",
+    "POST /api/v3/steps current_step=category draft.category_leaf_id+root_category_id (strings)",
+    "GET /api/v3/suggested-item-data/{upload_id} until 200",
+    "POST /api/v3/steps current_step=loading",
+    "POST /api/v3/items Accept upload-v2"
+  ],
+  "delete": "DELETE /api/v3/items/{id}",
+  "example": {
+    "attributes": {
+      "title": "TEST walla CLI - borrar",
+      "description": "Anuncio de prueba. NO COMPRAR.",
+      "price_amount": 9,
+      "condition": "good"
+    },
+    "category_leaf_id": "10105",
+    "apply_discount": false,
+    "location": {
+      "latitude": 41.3874,
+      "longitude": 2.1686,
+      "approximated": true
+    },
+    "delivery": {
+      "allowed_by_user": false,
+      "max_weight_kg": null,
+      "cost_configuration_id": null
+    },
+    "upload_id": "00000000-0000-0000-0000-000000000000"
+  },
+  "required_keys": [
+    "attributes",
+    "category_leaf_id",
+    "apply_discount",
+    "location",
+    "delivery",
+    "upload_id"
+  ],
+  "attribute_required_keys": ["title", "description", "price_amount"],
+  "conditions": ["as_good_as_new", "good", "fair", "has_given_it_all"]
+}

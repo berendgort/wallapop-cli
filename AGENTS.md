@@ -57,9 +57,11 @@ Ranks: models 10 → exceptions 15 → http 20 → core 30 → search/account/hu
 
 - **Do** keep files <= 250 LOC.
 - **Do** fail closed; typed `error_type`.
-- **Do** require `--yes` for say/offer.
+- **Do** require `--yes` for bare say/offer/sell/unsell. `pursue` and `desk` send negotiation chat without a per-message prompt. Never pay.
 - **Don't** commit session.json, cookies, or tokens.
 - **Don't** invent wire shapes without a fixture.
 - **Don't** post buyer offers as `{item_id, amount, currency}` (HTTP 400).
   Use `walla.account.offer_wire.build_offer_body` / `fixtures/offer_buyer_request.json`.
+- **Don't** create listings without `Accept: application/vnd.upload-v2+json`
+  (HTTP 405). Use `walla sell` / `fixtures/sell_item_request.json`.
 - **Don't** require `.env` credentials; login is cookie paste.

@@ -1,44 +1,34 @@
 ---
 name: walla
 description: >
-  When the user pastes github.com/berendgort/wallapop-cli, wants Wallapop.es
-  search, inbox, offers, or chat: install walla, run doctor, have the human
-  walla login (paste session cookie), then look / negotiate / talk with
-  walla … --json. Never scrape HTML. Never print cookies or tokens. Never pay.
+  Router for Wallapop.es. Use when the user pastes github.com/berendgort/wallapop-cli
+  or the task is mixed. Install walla, run doctor, have the human walla login
+  (paste the session cookie), then follow skills/walla-buy or skills/walla-sell.
+  Never scrape HTML. Never print cookies or tokens. Never pay or accept a deal.
 license: MIT
 ---
 
-# walla — agent skill (follow exactly)
+# walla — router
 
-## Bootstrap
+One CLI does the work. Skills only say which command to run.
 
 ```bash
-pipx install 'walla-cli[mcp]'   # PyPI: https://pypi.org/project/walla-cli/
+pipx install 'walla-cli[mcp]'
 walla doctor --json
-# If auth.session is false: ask human to run `walla login` and paste cookie
-walla instruct --json           # read mandate + hitl.ladder + present
+walla instruct --json
 ```
 
-If `mandate.budget` is null, ask once:
+If `auth.session` is false, the human runs `walla login` and pastes the cookie.
+If `mandate.budget` is null and this is a buy, ask once:
 
 ```bash
 walla setup --lat 41.39 --lon 2.17 --km 30 --budget 400 \
   --aggression fair --must "kite cabrinha" --json
 ```
 
-## Loop (efficient HITL)
+| Task | Skill |
+|------|--------|
+| Find items, message sellers, follow the inbox, pick a price | `skills/walla-buy/SKILL.md` |
+| Publish a listing, answer buyers, pick a price | `skills/walla-sell/SKILL.md` |
 
-1. Search Spain-wide inside budget: `walla search "…" --json`
-   Distance only if the human asked nearby or pickup: add `--local`.
-   Optional shortlist share: `--export md,csv,html,pdf --out ./shortlist`
-2. **Present Wallapop results** from `data.shortlist` (already ranked best-first):
-   say they are on wallapop.es, number them 1…N, and put a markdown link on
-   every `https://es.wallapop.com/item/…` URL. Never summarize without links.
-3. One GRAB → `walla negotiate <id> --json`. Several GRABs → ask human to pick an id.
-4. Show opening + offer_eur + walk_away. Human approves text and EUR.
-5. Open chat if needed: `walla chat <item_id> --json` (listing Chat button).
-6. Only then: `walla say <item_id> "…" --yes` and/or `walla offer … --eur N --yes`
-   If offer returns 409 (seller disabled offers), put the EUR in the chat text.
-7. **Stop.** Human pays or meets in the Wallapop app. `--yes` never means buy.
-
-Reads and negotiate drafts are safe. Sends need confirm.
+The human closes the deal in the Wallapop app. walla never pays and never taps Accept.

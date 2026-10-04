@@ -15,12 +15,12 @@ def instruct_recipe() -> dict[str, Any]:
     profile = _load_profile()
     return {
         "name": "walla",
-        "tagline": "look · offer · talk",
+        "tagline": "look · offer · talk · sell",
         "example": (
-            "Human: find a used kite near Barcelona under 400eur, message "
-            "seller, offer if GRAB. Agent: walla setup --budget 400 "
-            "--aggression fair --must 'kite' -> search -> negotiate draft "
-            "-> human approves text+EUR -> say/offer --yes. Never pay."
+            "Human: find a used kite under 400eur and negotiate. "
+            "Agent: walla pursue \"kite\" --json, then walla desk --json "
+            "until stack.best is set. Present the why and the item link. "
+            "Do not ask the human to send messages. Human closes in the app."
         ),
         "mandate": {
             "budget": profile.spend_cap,
@@ -53,25 +53,29 @@ def instruct_recipe() -> dict[str, Any]:
                     "ask_human": "if more than one GRAB, human picks the id",
                 },
                 {
-                    "step": "negotiate",
-                    "agent": "walla negotiate <id> --json draft",
-                    "ask_human": "approve the Spanish text",
+                    "step": "pursue",
+                    "agent": (
+                        "walla pursue \"<query>\" --json sends the opening wave. "
+                        "Do not ask the human to approve each text."
+                    ),
+                    "ask_human": "never for the messages",
                 },
                 {
-                    "step": "say",
+                    "step": "desk",
                     "agent": (
-                        "never alone. walla chat <item_id> opens the listing Chat "
-                        "button. walla say <item_id_or_conv> \"…\" --yes sends text."
+                        "walla desk --json reads the inbox once, replies, "
+                        "and returns stack.best plus why. Repeat until a price agrees."
                     ),
-                    "ask_human": "yes to that exact text, then walla say --yes",
+                    "ask_human": "never for the messages",
                 },
                 {
                     "step": "offer",
                     "agent": (
-                        "never alone; refuse if EUR > budget. "
-                        "On 409 offer-disabled: send the EUR in chat text instead."
+                        "Prefer chat text from pursue/desk. "
+                        "walla offer --yes only if a formal offer is required. "
+                        "On 409, the EUR stays in the chat text."
                     ),
-                    "ask_human": "yes to that exact EUR, then walla offer --yes",
+                    "ask_human": "never during pursue/desk",
                 },
                 {
                     "step": "pay_or_buy",
@@ -80,7 +84,11 @@ def instruct_recipe() -> dict[str, Any]:
                 },
             ],
             "never_pay": True,
-            "yes_means": "send chat or price offer only; never complete purchase",
+            "yes_means": (
+                "bare say/offer/sell still need --yes. "
+                "pursue and desk send negotiation chat without asking. "
+                "never complete purchase"
+            ),
         },
         "protocol": [
             "Install from PyPI: pipx install 'walla-cli[mcp]' "
@@ -91,7 +99,8 @@ def instruct_recipe() -> dict[str, Any]:
             "If mandate.budget is null: ask once for budget + aggression + must words.",
             "Do the ask with walla … --json. Always narrate as Wallapop.es "
             "and paste data.shortlist with full item URLs (markdown links).",
-            "Draft with walla negotiate; never say/offer without human --yes; never pay.",
+            "Negotiate with walla pursue and walla desk. Do not ask the human "
+            "to send or approve each message. Never pay.",
         ],
         "present": {
             "channel": "wallapop.es",
@@ -112,21 +121,28 @@ def instruct_recipe() -> dict[str, Any]:
                 "walla item <id> --json",
             ],
             "talk": [
-                "walla chat <item_id> --json",
+                'walla pursue "<query>" --json',
+                "walla desk --json",
                 "walla negotiate <id> --json",
                 "walla inbox --json",
-                "walla thread <id> --json",
-                'walla say <item_or_conv> "…" --yes',
             ],
             "offer": [
                 "walla negotiate <id> --json",
                 "walla offer <id> --eur <n> --yes",
             ],
+            "sell": [
+                "walla sell <photo.jpg>… --json  # returns questions",
+                "walla sell <photos> --title … --desc … --eur N "
+                "--category <leaf> --root <root> --yes",
+                "walla unsell <item_id> --yes",
+            ],
         },
         "rules": [
             "Always present Wallapop shortlists ranked best-first with markdown item links.",
             "search / item / inbox / negotiate are safe reads or drafts.",
-            "say and offer require --yes / confirm=true; name listing + euros.",
+            "pursue and desk send negotiation messages. Do not ask the human to send.",
+            "Bare say, offer, and sell still need --yes. Never pay or accept in walla.",
+            "Sell: drop photos, ask data.questions, then publish with --yes only.",
             "If only asked to look, do not send.",
             "Ambiguous match or multiple GRABs: ask once with candidates.",
             "Default search is all of Spain. Shipping is enough; do not fence on profile.km.",

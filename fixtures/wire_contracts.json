@@ -1,0 +1,230 @@
+{
+  "shared_headers": ["X-DeviceOS", "X-AppVersion", "Accept-Language"],
+  "requests": [
+    {
+      "id": "search",
+      "cli": "search",
+      "method": "GET",
+      "path": "/api/v3/search",
+      "auth": false,
+      "ok_status": [200]
+    },
+    {
+      "id": "item",
+      "cli": "item",
+      "method": "GET",
+      "path": "/api/v3/items/{id}",
+      "auth": false,
+      "ok_status": [200]
+    },
+    {
+      "id": "categories",
+      "cli": "categories",
+      "method": "GET",
+      "path": "/api/v3/categories",
+      "auth": false,
+      "ok_status": [200]
+    },
+    {
+      "id": "session_mint",
+      "cli": "login",
+      "method": "GET",
+      "path": "/api/auth/session",
+      "auth": false,
+      "ok_status": [200]
+    },
+    {
+      "id": "password_login",
+      "cli": "login",
+      "method": "POST",
+      "path": "/api/v3/access/login",
+      "auth": false,
+      "body_keys": ["username", "password"],
+      "ok_status": [200]
+    },
+    {
+      "id": "refresh",
+      "cli": "login",
+      "method": "POST",
+      "path": "/api/v3/access/refresh",
+      "auth": false,
+      "body_keys": ["refresh_token"],
+      "ok_status": [200]
+    },
+    {
+      "id": "whoami",
+      "cli": "whoami",
+      "method": "GET",
+      "path": "/api/v3/users/me",
+      "auth": true,
+      "ok_status": [200, 404]
+    },
+    {
+      "id": "inbox",
+      "cli": "inbox",
+      "method": "GET",
+      "path": "/bff/messaging/inbox",
+      "auth": true,
+      "ok_status": [200],
+      "known_bad": [{"status": 405, "cause": "GET /api/v3/conversations"}]
+    },
+    {
+      "id": "chat_open",
+      "cli": "chat",
+      "method": "POST",
+      "path": "/api/v3/conversations",
+      "auth": true,
+      "body_keys": ["item_id"],
+      "ok_status": [200, 201]
+    },
+    {
+      "id": "im_token",
+      "cli": "say",
+      "method": "GET",
+      "path": "/api/v3/instant-messaging/token",
+      "auth": true,
+      "ok_status": [200]
+    },
+    {
+      "id": "say_pubnub",
+      "cli": "say",
+      "method": "GET",
+      "path": "https://ps2.pndsn.com/publish/",
+      "needle": "ps2.pndsn.com",
+      "auth": false,
+      "ok_status": [200],
+      "known_bad": [{"status": 404, "cause": "REST messages"}]
+    },
+    {
+      "id": "offer",
+      "cli": "offer",
+      "method": "POST",
+      "path": "/api/v3/delivery/buyer/offers",
+      "auth": true,
+      "body_keys": [
+        "offer_id",
+        "offer_price_amount",
+        "offer_price_currency",
+        "item_ids"
+      ],
+      "forbidden_body_keys": ["item_id", "amount", "currency"],
+      "ok_status": [200, 201],
+      "known_bad": [
+        {"status": 400, "cause": "wrong body or missing X-AppVersion"},
+        {"status": 409, "cause": "seller disabled offers"}
+      ]
+    },
+    {
+      "id": "favorites",
+      "cli": "fav list",
+      "method": "GET",
+      "path": "/api/v3/users/me/favorites",
+      "auth": true,
+      "ok_status": [200]
+    },
+    {
+      "id": "favorites_fallback",
+      "cli": "fav list",
+      "method": "GET",
+      "path": "/api/v3/favorites",
+      "auth": true,
+      "ok_status": [200]
+    },
+    {
+      "id": "favorite_add",
+      "cli": "fav add",
+      "method": "POST",
+      "path": "/api/v3/items/{id}/favorite",
+      "needle": "/favorite",
+      "auth": true,
+      "ok_status": [200, 201, 204]
+    },
+    {
+      "id": "favorite_rm",
+      "cli": "fav rm",
+      "method": "DELETE",
+      "path": "/api/v3/items/{id}/favorite",
+      "needle": "/favorite",
+      "auth": true,
+      "ok_status": [200, 204]
+    },
+    {
+      "id": "sell_steps",
+      "cli": "sell",
+      "method": "POST",
+      "path": "/api/v3/steps",
+      "auth": true,
+      "ok_status": [200]
+    },
+    {
+      "id": "sell_pictures",
+      "cli": "sell",
+      "method": "POST",
+      "path": "/api/v3/upload/{id}/pictures",
+      "needle": "/api/v3/upload/",
+      "auth": true,
+      "multipart": ["file"],
+      "ok_status": [200, 204]
+    },
+    {
+      "id": "sell_suggest",
+      "cli": "sell",
+      "method": "GET",
+      "path": "/api/v3/suggested-item-data/{id}",
+      "needle": "/suggested-item-data/",
+      "auth": true,
+      "ok_status": [200, 404]
+    },
+    {
+      "id": "sell_create",
+      "cli": "sell",
+      "method": "POST",
+      "path": "/api/v3/items",
+      "needle": "/api/v3/items",
+      "auth": true,
+      "accept": "application/vnd.upload-v2+json",
+      "multipart": ["image", "item"],
+      "ok_status": [200, 201],
+      "known_bad": [{"status": 405, "cause": "missing upload-v2 Accept"}]
+    },
+    {
+      "id": "sell_picture2",
+      "cli": "sell",
+      "method": "POST",
+      "path": "/api/v3/items/{id}/picture2",
+      "needle": "/picture2",
+      "auth": true,
+      "multipart": ["image", "order"],
+      "ok_status": [200, 201, 204]
+    },
+    {
+      "id": "unsell",
+      "cli": "unsell",
+      "method": "DELETE",
+      "path": "/api/v3/items/{id}",
+      "needle": "/api/v3/items/",
+      "auth": true,
+      "ok_status": [200, 204]
+    },
+    {
+      "id": "inbox_not_conversations",
+      "cli": "inbox",
+      "method": "GET",
+      "path": "/api/v3/conversations",
+      "forbidden": true,
+      "auth": true,
+      "ok_status": [],
+      "known_bad": [{"status": 405, "cause": "inbox is /bff/messaging/inbox"}]
+    },
+    {
+      "id": "say_not_rest_messages",
+      "cli": "say",
+      "method": "POST",
+      "path": "/api/v3/instant-messaging/messages",
+      "forbidden": true,
+      "auth": true,
+      "ok_status": [],
+      "known_bad": [{"status": 404, "cause": "say uses PubNub publish"}]
+    }
+  ]
+}

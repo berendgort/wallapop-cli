@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import ast
+import re
 import sys
 from pathlib import Path
 
@@ -156,6 +157,122 @@ def check_offer_fixture() -> list[str]:
     return bad
 
 
+def check_sell_fixture() -> list[str]:
+    """Keep sell wire constants in sync with fixtures/sell_item_request.json."""
+    import json
+
+    wire = ROOT / "walla" / "account" / "sell_wire.py"
+    if not wire.is_file():
+        return ["walla/account/sell_wire.py missing"]
+    path = ROOT / "fixtures" / "sell_item_request.json"
+    if not path.is_file():
+        return ["fixtures/sell_item_request.json missing"]
+    meta = json.loads(path.read_text(encoding="utf-8"))
+    tree = ast.parse(wire.read_text(encoding="utf-8"))
+    consts: dict[str, tuple[str, ...]] = {}
+    for node in tree.body:
+        if not isinstance(node, ast.Assign) or len(node.targets) != 1:
+            continue
+        target = node.targets[0]
+        if not isinstance(target, ast.Name):
+            continue
+        if target.id not in (
+            "REQUIRED_ITEM_KEYS",
+            "REQUIRED_ATTR_KEYS",
+            "CONDITIONS",
+        ):
+            continue
+        if not isinstance(node.value, ast.Tuple):
+            continue
+        vals: list[str] = []
+        for elt in node.value.elts:
+            if isinstance(elt, ast.Constant) and isinstance(elt.value, str):
+                vals.append(elt.value)
+        consts[target.id] = tuple(vals)
+    bad: list[str] = []
+    if consts.get("REQUIRED_ITEM_KEYS") != tuple(meta.get("required_keys") or ()):
+        bad.append("sell fixture required_keys != sell_wire.REQUIRED_ITEM_KEYS")
+    if consts.get("REQUIRED_ATTR_KEYS") != tuple(
+        meta.get("attribute_required_keys") or ()
+    ):
+        bad.append(
+            "sell fixture attribute_required_keys != sell_wire.REQUIRED_ATTR_KEYS"
+        )
+    if consts.get("CONDITIONS") != tuple(meta.get("conditions") or ()):
+        bad.append("sell fixture conditions != sell_wire.CONDITIONS")
+    example = meta.get("example") or {}
+    for k in meta.get("required_keys") or []:
+        if k not in example:
+            bad.append(f"sell fixture example missing {k}")
+    return bad
+
+
+_WIRE_RE = re.compile(r"/(?:api|bff)/[A-Za-z0-9_/{}\-]+")
+_WIRE_ROOTS = ("account", "search", "http")
+
+
+def _static_prefix(path: str) -> str:
+    return path.split("{", 1)[0].rstrip("/")
+
+
+def _path_listed(found: str, contracts: list[dict[str, object]]) -> bool:
+    """True when `found` is a catalog path or an f-string fragment of one."""
+    found = found.rstrip("/")
+    for contract in contracts:
+        raw = contract.get("path")
+        if not isinstance(raw, str) or raw.startswith("http"):
+            continue
+        template = raw.rstrip("/")
+        if re.fullmatch(re.sub(r"\{[^/}]+\}", "[^/]+", template), found):
+            return True
+        if template.startswith(found):
+            return True
+    return False
+
+
+def check_wire_catalog() -> list[str]:
+    """Every /api/ and /bff/ literal in account, search, and http is catalogued."""
+    import json
+
+    path = ROOT / "fixtures" / "wire_contracts.json"
+    if not path.is_file():
+        return ["fixtures/wire_contracts.json missing"]
+    catalog = json.loads(path.read_text(encoding="utf-8"))
+    contracts = catalog.get("requests")
+    if not isinstance(contracts, list) or not contracts:
+        return ["wire_contracts.json requests missing"]
+    bad: list[str] = []
+    blob_parts: list[str] = []
+    for name in _WIRE_ROOTS:
+        root = WALLA / name
+        for py in sorted(root.rglob("*.py")):
+            text = py.read_text(encoding="utf-8")
+            blob_parts.append(text)
+            tree = ast.parse(text)
+            rel = py.relative_to(ROOT)
+            for node in ast.walk(tree):
+                if not isinstance(node, ast.Constant) or not isinstance(node.value, str):
+                    continue
+                literal = node.value
+                if "/api/" not in literal and "/bff/" not in literal:
+                    continue
+                for found in _WIRE_RE.findall(literal):
+                    if not _path_listed(found, contracts):
+                        bad.append(f"{rel}: uncovered wire path {found}")
+    blob = "\n".join(blob_parts)
+    for contract in contracts:
+        if not isinstance(contract, dict) or contract.get("forbidden"):
+            continue
+        cid = str(contract.get("id"))
+        raw = contract.get("path")
+        needle = contract.get("needle")
+        if not isinstance(needle, str):
+            needle = _static_prefix(raw) if isinstance(raw, str) else ""
+        if needle and needle not in blob:
+            bad.append(f"catalog {cid} needle {needle!r} missing from walla")
+    return bad
+
+
 def main() -> int:
     errors = (
         check_loc()
@@ -163,13 +280,15 @@ def main() -> int:
         + check_print()
         + check_layers()
         + check_offer_fixture()
+        + check_sell_fixture()
+        + check_wire_catalog()
     )
     if errors:
         print("FAILED code quality:")
         for e in errors:
             print(f"  {e}")
         return 1
-    print("OK: LOC<=250, no em-dash, no bare print, layer DAG, offer wire")
+    print("OK: LOC<=250, no em-dash, no bare print, layer DAG, offer/sell/wire catalog")
     return 0
 
 

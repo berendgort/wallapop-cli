@@ -7,14 +7,14 @@
 ██║███╗██║ ██╔══██║ ██║      ██║      ██╔══██║  ╚════╝  ██║      ██║      ██║
 ╚███╔███╔╝ ██║  ██║ ███████╗ ███████╗ ██║  ██║          ╚██████╗ ███████╗ ██║
  ╚══╝╚══╝  ╚═╝  ╚═╝ ╚══════╝ ╚══════╝ ╚═╝  ╚═╝           ╚═════╝ ╚══════╝ ╚═╝
-  look · offer · talk
+  look · offer · talk · sell
   Dr. Berend Gort  ·  www.berendgort.dev
 ```
 
 ![walla banner](docs/assets/walla-github-banner.jpg)
 
 **walla** is an unofficial Wallapop.es **CLI + MCP + Python library** for Cursor
-agents and humans: search listings, read inbox, send a message, make an offer.
+agents and humans: search listings, negotiate, publish a listing, and follow the inbox.
 
 Not affiliated with Wallapop. Respect ToS and rate limits.
 
@@ -23,27 +23,26 @@ Not affiliated with Wallapop. Respect ToS and rate limits.
 You tell Cursor: *“Find me a used kite near Barcelona under €400, message
 the seller, and offer if it’s a GRAB.”*
 
-The agent runs `walla` — ranks listings **GRAB / LOOK / PASS**, links you the
-item, asks before sending, then talks and offers on your behalf:
+The agent runs `walla` — ranks listings **GRAB / LOOK / PASS**, messages the
+shortlist, and follows replies until a price is agreed. You close the deal
+in the Wallapop app.
 
 ```bash
 walla setup --lat 41.39 --lon 2.17 --km 30 --label Barcelona \
   --budget 400 --aggression fair --must "kite cabrinha"
-walla search "tabla kite Cabrinha" --max 40 --json
-# agent: GRAB · Cabrinha Moto 10m · €320 · 4 km
-#        https://es.wallapop.com/item/...
-
-walla search "…" --export md,csv,html,pdf --out ./shortlist --json
-# or later: walla export --format md,csv,html,pdf --out ./shortlist --json
-
 walla login                         # paste session cookie once
-walla negotiate <id> --json         # draft only; you approve text + EUR
-walla say <id> "…" --yes            # only after you approve
-walla offer <id> --eur 280 --yes    # only after you approve; never pays
+walla pursue "tabla kite Cabrinha" --json
+walla desk --json                   # one inbox read; replies; stack.best
 ```
 
-That is the product: a Cursor agent that can **look, draft, talk, and offer**
-up to the point of payment. You finish pay/meet in the Wallapop app.
+Sell is the same idea: answer the photo questions, publish once, then desk
+talks to buyers.
+
+```bash
+walla sell ./shot.jpg --json
+walla sell ./shot.jpg --title "…" --desc "…" --eur 40 \
+  --category 10105 --root 12579 --floor 35 --yes --json
+```
 
 **Quality bar (enforced in CI):**
 
@@ -95,26 +94,25 @@ Optional MCP:
 | Ask | Command |
 |-----|---------|
 | Mandate | `walla setup --budget 400 --aggression fair --must "kite"` |
-| Look | `walla search "tabla kite" --max 40 --json` then `walla item <id> --json` |
-| Draft | `walla negotiate <id> --json` (win-win Spanish draft; never sends) |
-| Talk | `walla inbox --json` · `walla thread <id> --json` · `walla say <id> "…" --yes` |
-| Offer | `walla offer <id> --eur 180 --yes` |
+| Look | `walla search "tabla kite" --max 40 --json` |
+| Buy | `walla pursue "<query>" --json` then `walla desk --json` |
+| Sell | `walla sell <photos> --json`, then the same command with `--yes` |
+| Close | Human pays or accepts in the Wallapop app |
 
-### HITL (ask once per decision)
+### HITL
 
 | Step | Agent alone | Ask human |
 |------|-------------|-----------|
 | Search inside mandate | yes | if query vague or budget unset |
-| Shortlist | show ranked Wallapop rows with markdown item links | if more than one GRAB, pick the id |
-| Negotiate draft | yes | approve Spanish text |
-| `say --yes` | never | yes to that exact text |
-| `offer --yes` | never; refuse if EUR > budget | yes to that exact EUR |
-| Pay / buy / reserve | **never** | human finishes in the Wallapop app |
+| `pursue` / `desk` | yes, including the chat messages | never for each text |
+| Publish or delete a listing | no | `--yes` once the questions are answered |
+| Pay / accept / meet | **never** | human finishes in the Wallapop app |
 
 Rules:
 
-- Reads and negotiate drafts are safe. `say` / `offer` need `--yes`.
-- `--yes` means send chat or price offer only. It never completes a purchase.
+- `pursue` and `desk` send negotiation chat. Do not ask the human to send.
+- Bare `say` / `offer` / `sell` / `unsell` still need `--yes`.
+- `--yes` never completes a purchase or accepts a sale.
 - If they only asked to look, do not send.
 - Ambiguous match or multiple GRABs: ask once with candidates.
 - Always present Wallapop shortlists ranked best-first with a markdown link on every item URL.
@@ -143,9 +141,11 @@ walla doctor --json
 | `walla search` / `item` / `categories` | Look |
 | `walla watch add\|list\|check` | Local saved searches |
 | `walla login` / `logout` / `whoami` | Session (paste cookie; optional `--password`) |
+| `walla pursue` / `desk` | Message a shortlist and follow the inbox |
 | `walla negotiate` | Win-win Spanish draft (never sends) |
-| `walla inbox` / `thread` / `say` | Talk |
-| `walla offer` | Offer (prints total, needs `--yes`) |
+| `walla inbox` / `thread` / `say` | Talk (`say` needs `--yes`) |
+| `walla offer` | Formal offer (needs `--yes`) |
+| `walla sell` / `unsell` | Publish or delete a listing (`--yes`) |
 | `walla fav list\|add\|rm` | Favorites |
 | `walla instruct` / `doctor` | Agent recipe + health |
 

@@ -9,6 +9,7 @@ __all__ = (
     "config_dir",
     "last_search_path",
     "profile_path",
+    "pursuits_path",
     "session_path",
     "watches_path",
 )
@@ -35,3 +36,7 @@ def watches_path() -> Path:
 
 def last_search_path() -> Path:
     return config_dir() / "last_search.json"
+
+
+def pursuits_path() -> Path:
+    return config_dir() / "pursuits.json"

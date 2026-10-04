@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import uuid
 from typing import Any
 
 from walla.account.login import ensure_access_token
@@ -116,18 +117,21 @@ def make_offer(
             f"In-person listing outside pickup radius ({item.title}). Refuse offer."
         )
     http = client or _auth_client()
+    offer_id = str(uuid.uuid4())
     try:
         raw = http.post(
             "/api/v3/delivery/buyer/offers",
             json_body={
-                "item_id": item_id,
-                "amount": offer_eur,
-                "currency": "EUR",
+                "offer_id": offer_id,
+                "offer_price_amount": offer_eur,
+                "offer_price_currency": "EUR",
+                "item_ids": [item_id],
             },
             auth=True,
         )
         return {
             "sent": True,
+            "offer_id": offer_id,
             "quote": quote.model_dump(mode="json"),
             "title": item.title,
             "response": raw,

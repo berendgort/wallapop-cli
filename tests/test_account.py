@@ -126,3 +126,8 @@ def test_make_offer_confirm_and_wire(
             out = make_offer("1", 40, confirm=True)
             assert out["sent"] is True
             assert out["quote"]["offer_eur"] == 40
+            body = client.post.call_args.kwargs["json_body"]
+            assert body["item_ids"] == ["1"]
+            assert body["offer_price_amount"] == 40
+            assert body["offer_price_currency"] == "EUR"
+            assert body["offer_id"] == out["offer_id"]

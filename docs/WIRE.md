@@ -48,7 +48,9 @@ Reported shapes (confirm with a live token before trusting writes):
 
 - Inbox: `GET /api/v3/conversations`
 - Messages: `GET|POST /api/v3/conversations/{id}/messages`
-- Offers: `POST /api/v3/delivery/buyer/offers`
+- Offers: `POST /api/v3/delivery/buyer/offers` with
+  `{offer_id, offer_price_amount, offer_price_currency, item_ids}`.
+  `offer_id` is a client UUID. `item_ids` is a one-element list of the listing id.
 - Favorites: `/api/v3/users/me/favorites`, `/api/v3/items/{id}/favorite`
 
 Writes that fail closed as `error_type: unsupported` until fixtures exist.

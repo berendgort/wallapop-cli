@@ -31,8 +31,8 @@ BANNED_PHRASES = (
 )
 
 _AGGRESSION_PCT: dict[Aggression, float] = {
-    "soft": 0.95,
-    "fair": 0.90,
+    "soft": 0.90,
+    "fair": 0.82,
     "firm": 0.80,
 }
 
@@ -82,7 +82,7 @@ def draft_negotiation(
             f"Listing is PASS under mandate (must_match / budget / radius): {listing.title}"
         )
     walk = _walk_away(ask, profile)
-    offer = _first_offer(ask, walk, verdict, profile.aggressiveness)
+    offer = _first_offer(ask, walk, profile.aggressiveness)
     specific = _specific_thing(listing)
     greeting = f"Hola {seller_name}," if seller_name else "Hola,"
     opening, offer_line, you_give = _copy(greeting, specific, offer, _ships(listing))
@@ -159,17 +159,11 @@ def _walk_away(ask: float, profile: Profile) -> float:
     return round(min(cap, ask), 2)
 
 
-def _first_offer(
-    ask: float, walk: float, verdict: str, aggressiveness: Aggression
-) -> float:
+def _first_offer(ask: float, walk: float, aggressiveness: Aggression) -> float:
     """Aggression sets the ask percent; never below 80% on first message."""
     if ask <= 0:
         return 0.0
-    pct = _AGGRESSION_PCT.get(aggressiveness, 0.90)
-    if ask <= walk and verdict == "GRAB" and aggressiveness == "fair":
-        pct = max(pct, 0.95)
-    elif ask <= walk and verdict == "GRAB" and aggressiveness == "soft":
-        pct = 0.98
+    pct = _AGGRESSION_PCT.get(aggressiveness, 0.82)
     raw = ask * pct
     floor = ask * 0.80
     offer = max(floor, min(raw, walk, ask))

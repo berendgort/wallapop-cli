@@ -51,8 +51,18 @@ def test_draft_opening_is_specific_and_polite() -> None:
 def test_offer_band_never_lowballs() -> None:
     profile = Profile(lat=41.39, lon=2.17, km=30, pickup_km=30, budget=400)
     brief = draft_negotiation(_listing(price=200), profile)
+    assert brief.offer_eur == 164  # fair is 82% of ask
     assert brief.offer_eur >= 200 * 0.80
     assert brief.offer_eur <= brief.walk_away_eur
+
+
+def test_fair_on_800_opens_near_650() -> None:
+    profile = Profile(lat=41.39, lon=2.17, km=30, pickup_km=30, budget=850)
+    brief = draft_negotiation(
+        _listing(price=800, ship=True, title="North Reach 13m"),
+        profile,
+    )
+    assert brief.offer_eur == 656
 
 
 def test_firm_offer_at_floor_within_budget() -> None:

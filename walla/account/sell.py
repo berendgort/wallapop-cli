@@ -9,7 +9,13 @@ from typing import Any
 
 from curl_cffi import CurlMime, requests
 
-from walla.account.login import ensure_access_token
+from walla.account.sell_steps import (
+    auth_client,
+    auth_headers,
+    parse_steps_draft,
+    poll_suggested,
+    post_step,
+)
 from walla.account.sell_wire import build_item_body
 from walla.core.exceptions import (
     WallaHTTPError,
@@ -18,7 +24,7 @@ from walla.core.exceptions import (
     WallaUnsupportedError,
 )
 from walla.http.client import HttpClient
-from walla.http.headers import API_BASE, WEB_BASE, default_headers
+from walla.http.headers import API_BASE, WEB_BASE
 from walla.http.polite import wait_turn
 from walla.search.api import get_item
 from walla.search.parse import item_url
@@ -39,42 +45,11 @@ _IMAGE_TYPES = {
 }
 
 
-def _auth_client() -> HttpClient:
-    sess = ensure_access_token()
-    return HttpClient(access_token=sess.access_token, device_id=sess.device_id)
-
-
-def _auth_headers() -> dict[str, str]:
-    sess = ensure_access_token()
-    headers = default_headers(device_id=sess.device_id)
-    headers["Authorization"] = f"Bearer {sess.access_token}"
-    return headers
-
-
-def _step(
-    http: HttpClient,
-    upload_id: str,
-    *,
-    current: str | None,
-    draft: dict[str, Any],
-) -> dict[str, Any]:
-    body: dict[str, Any] = {
-        "mode": {"action": "upload", "id": upload_id},
-        "draft": draft,
-    }
-    if current:
-        body["current_step"] = current
-    raw = http.post("/api/v3/steps", json_body=body, auth=True)
-    if not isinstance(raw, dict):
-        raise WallaUnsupportedError("steps returned non-object")
-    return raw
-
-
 def upload_pictures(upload_id: str, photos: list[Path]) -> int:
     """POST each photo to /api/v3/upload/{id}/pictures (HTTP 204)."""
     if not photos:
         raise ValueError("at least one photo required")
-    headers = {k: v for k, v in _auth_headers().items() if k.lower() != "content-type"}
+    headers = {k: v for k, v in auth_headers().items() if k.lower() != "content-type"}
     session: Any = requests.Session()
     for path in photos:
         data = path.read_bytes()
@@ -101,7 +76,7 @@ def upload_pictures(upload_id: str, photos: list[Path]) -> int:
 
 def create_listing(item: dict[str, Any], first_photo: Path) -> dict[str, Any]:
     """Multipart POST /api/v3/items with Accept upload-v2."""
-    headers = {k: v for k, v in _auth_headers().items() if k.lower() != "content-type"}
+    headers = {k: v for k, v in auth_headers().items() if k.lower() != "content-type"}
     headers["Accept"] = _UPLOAD_ACCEPT
     data = first_photo.read_bytes()
     ctype = _IMAGE_TYPES.get(first_photo.suffix.lower(), "image/jpeg")
@@ -130,7 +105,7 @@ def create_listing(item: dict[str, Any], first_photo: Path) -> dict[str, Any]:
 
 
 def delete_listing(item_id: str, *, client: HttpClient | None = None) -> dict[str, Any]:
-    http = client or _auth_client()
+    http = client or auth_client()
     http.delete(f"/api/v3/items/{item_id}", auth=True)
     return {"id": item_id, "deleted": True}
 
@@ -154,34 +129,26 @@ def publish_listing(
     for p in paths:
         if not p.is_file():
             raise ValueError(f"photo not found: {p}")
-    http = _auth_client()
+    http = auth_client()
     upload_id = str(uuid.uuid4())
     draft: dict[str, Any] = {"title": title.strip()[:50]}
-    _step(http, upload_id, current=None, draft={})
-    _step(http, upload_id, current="title", draft=draft)
+    post_step(http, upload_id, current=None, draft={})
+    post_step(http, upload_id, current="title", draft=draft)
     upload_pictures(upload_id, paths)
-    _step(http, upload_id, current="photo", draft=draft)
-    draft = {
-        **draft,
-        "category_leaf_id": str(category_leaf_id),
-        "root_category_id": str(root_category_id),
-    }
-    _step(http, upload_id, current="category", draft=draft)
-    for _ in range(8):
-        wait_turn()
-        try:
-            http.get(f"/api/v3/suggested-item-data/{upload_id}", auth=True)
-            break
-        except WallaHTTPError as exc:
-            if exc.status_code != 404:
-                raise
-    _step(http, upload_id, current="loading", draft=draft)
+    after_photo = post_step(http, upload_id, current="photo", draft=draft)
+    wire = parse_steps_draft(after_photo)
+    leaf = str(category_leaf_id)
+    root = str(root_category_id)
+    draft = {**draft, "category_leaf_id": leaf, "root_category_id": root}
+    post_step(http, upload_id, current="category", draft=draft)
+    poll_suggested(http, upload_id)
+    post_step(http, upload_id, current="loading", draft=draft)
     item = build_item_body(
         upload_id=upload_id,
         title=title,
         description=description,
         price_eur=price_eur,
-        category_leaf_id=category_leaf_id,
+        category_leaf_id=leaf,
         lat=lat,
         lon=lon,
         condition=condition,
@@ -197,11 +164,11 @@ def publish_listing(
         "title": title.strip()[:50],
         "url": _public_item_url(str(created["id"])),
         "photos": len(paths),
+        "wire_draft": wire,
     }
 
 
 def _public_item_url(item_id: str) -> str:
-    """Wallapop web needs the slug path, not the opaque item hash."""
     try:
         listing = get_item(item_id)
     except (
@@ -222,7 +189,7 @@ def _public_item_url(item_id: str) -> str:
 
 
 def _upload_extra_pictures(item_id: str, photos: list[Path]) -> None:
-    headers = {k: v for k, v in _auth_headers().items() if k.lower() != "content-type"}
+    headers = {k: v for k, v in auth_headers().items() if k.lower() != "content-type"}
     headers["Accept"] = _UPLOAD_ACCEPT
     session: Any = requests.Session()
     for idx, path in enumerate(photos, start=1):

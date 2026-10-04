@@ -34,6 +34,11 @@ Public URL: `https://es.wallapop.com/item/<web_slug>`.
 `leaf_id` + `root_id`. Sell accepts `--category <leaf-or-name>`; `--root` is
 optional.
 
+After `current_step=photo`, the steps `draft` may include `category_leaf_id`
+(title+photo hint). `GET /api/v3/suggested-item-data/{upload_id}` often returns
+empty HTTP 200; still poll before `loading`. CLI: `walla sell … --title … --suggest`.
+`walla desk --watch` polls the inbox until `stack.best` converges.
+
 ## Auth
 
 `POST https://api.wallapop.com/api/v3/access/login` with

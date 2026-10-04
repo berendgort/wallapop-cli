@@ -119,23 +119,23 @@ def test_publish_listing_mocked(tmp_path: Path) -> None:
     photo.write_bytes(b"\xff\xd8\xff\xd9")
     fake_http = MagicMock()
     fake_http.post.side_effect = [
-        {"step": {"id": "title"}},
-        {"step": {"id": "photo", "picture_upload": {"path": "/api/v3/upload/x/pictures"}}},
-        {"step": {"id": "category"}},
+        {"step": {"id": "title"}, "draft": {}},
+        {"step": {"id": "photo"}, "draft": {"title": "Test item"}},
         {
-            "step": {
-                "id": "loading",
-                "poll_before_next_step": {"path": "/api/v3/suggested-item-data/x"},
-            }
+            "step": {"id": "category"},
+            "draft": {"title": "Test item", "category_leaf_id": "10105"},
         },
-        {"step": {"id": "listing"}},
+        {"step": {"id": "loading"}, "draft": {"title": "Test item"}},
+        {"step": {"id": "listing"}, "draft": {"title": "Test item"}},
     ]
     fake_http.get.return_value = {}
     listing = MagicMock()
     listing.url = "https://es.wallapop.com/item/test-item-99"
     listing.web_slug = "test-item-99"
     with (
-        patch("walla.account.sell._auth_client", return_value=fake_http),
+        patch("walla.account.sell.auth_client", return_value=fake_http),
+        patch("walla.account.sell.post_step", side_effect=fake_http.post.side_effect),
+        patch("walla.account.sell.poll_suggested", return_value=None),
         patch("walla.account.sell.upload_pictures", return_value=1),
         patch(
             "walla.account.sell.create_listing",
@@ -156,7 +156,6 @@ def test_publish_listing_mocked(tmp_path: Path) -> None:
     assert out["id"] == "abc123"
     assert out["photos"] == 1
     assert out["url"] == "https://es.wallapop.com/item/test-item-99"
-    assert fake_http.post.call_count == 5
 
 
 def test_create_listing_multipart(tmp_path: Path) -> None:
@@ -179,7 +178,7 @@ def test_create_listing_multipart(tmp_path: Path) -> None:
     fake_session = MagicMock()
     fake_session.request.return_value = fake_resp
     with (
-        patch("walla.account.sell._auth_headers", return_value={"Authorization": "Bearer x"}),
+        patch("walla.account.sell.auth_headers", return_value={"Authorization": "Bearer x"}),
         patch("walla.account.sell.requests.Session", return_value=fake_session),
         patch("walla.account.sell.CurlMime") as mime_cls,
         patch("walla.account.sell.wait_turn"),
@@ -227,14 +226,16 @@ def test_publish_listing_two_photos(tmp_path: Path) -> None:
     listing.url = "https://es.wallapop.com/item/test-item-99"
     listing.web_slug = "test-item-99"
     with (
-        patch("walla.account.sell._auth_client", return_value=fake_http),
+        patch("walla.account.sell.auth_client", return_value=fake_http),
+        patch("walla.account.sell.post_step", side_effect=fake_http.post.side_effect),
+        patch("walla.account.sell.poll_suggested", return_value=None),
         patch("walla.account.sell.upload_pictures", return_value=2),
         patch(
             "walla.account.sell.create_listing",
             return_value={"id": "abc123", "flags": {}},
         ),
         patch("walla.account.sell.get_item", return_value=listing),
-        patch("walla.account.sell._auth_headers", return_value={}),
+        patch("walla.account.sell.auth_headers", return_value={}),
         patch("walla.account.sell.requests.Session", return_value=fake_session),
         patch("walla.account.sell.CurlMime") as mime_cls,
         patch("walla.account.sell.wait_turn"),

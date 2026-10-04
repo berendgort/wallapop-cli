@@ -250,8 +250,9 @@ def test_every_contract_is_sent(
         expires_at=9_999_999_999,
     )
     monkeypatch.setattr("walla.account.login.ensure_access_token", lambda: sess)
-    monkeypatch.setattr("walla.account.sell.ensure_access_token", lambda: sess)
-    monkeypatch.setattr("walla.account.sell._auth_client", lambda: rec)
+    monkeypatch.setattr("walla.account.sell_steps.ensure_access_token", lambda: sess)
+    monkeypatch.setattr("walla.account.sell.auth_client", lambda: rec)
+    monkeypatch.setattr("walla.account.sell_steps.auth_client", lambda: rec)
     monkeypatch.setattr("walla.account.chat.ensure_access_token", _must_not_mint)
     monkeypatch.setattr(
         "walla.account.actions.load_profile",

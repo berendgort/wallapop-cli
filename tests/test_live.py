@@ -11,7 +11,8 @@ import pytest
 from walla.account.chat import open_conversation
 from walla.account.inbox import list_conversations_raw
 from walla.account.login import ensure_access_token, whoami
-from walla.account.sell import _step, delete_listing, publish_listing, upload_pictures
+from walla.account.sell import delete_listing, publish_listing, upload_pictures
+from walla.account.sell_steps import post_step as _step
 from walla.account.session_store import load_session
 from walla.http.client import HttpClient
 from walla.http.polite import reset_polite

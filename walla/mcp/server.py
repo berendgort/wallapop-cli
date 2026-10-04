@@ -167,8 +167,16 @@ def build_server() -> Any:
         return _wrap(lambda: run_pursue(keywords, wave=wave))
 
     @mcp.tool()
-    def desk() -> dict[str, Any]:
-        """One inbox pass: answer threads and summarize the best agreed price."""
+    def desk(
+        watch: bool = False,
+        seconds: float = 45.0,
+        rounds: int = 12,
+    ) -> dict[str, Any]:
+        """Inbox pass (or --watch loop) that answers threads until a price converges."""
+        from walla.account.desk_watch import run_desk_watch
+
+        if watch:
+            return _wrap(lambda: run_desk_watch(seconds=seconds, rounds=rounds))
         return _wrap(run_desk)
 
     @mcp.tool()

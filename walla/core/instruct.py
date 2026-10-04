@@ -123,6 +123,7 @@ def instruct_recipe() -> dict[str, Any]:
             "talk": [
                 'walla pursue "<query>" --json',
                 "walla desk --json",
+                "walla desk --watch --seconds 45 --rounds 12 --json",
                 "walla negotiate <id> --json",
                 "walla inbox --json",
             ],
@@ -132,6 +133,7 @@ def instruct_recipe() -> dict[str, Any]:
             ],
             "sell": [
                 "walla categories --find <name> --json",
+                "walla sell <photos> --title … --suggest --json",
                 "walla sell <photo.jpg>… --json  # returns questions",
                 "walla sell <photos> --title … --desc … --eur N "
                 "--category <leaf-or-name> [--root <root>] --yes",
@@ -142,8 +144,10 @@ def instruct_recipe() -> dict[str, Any]:
             "Always present Wallapop shortlists ranked best-first with markdown item links.",
             "search / item / inbox / negotiate are safe reads or drafts.",
             "pursue and desk send negotiation messages. Do not ask the human to send.",
+            "desk --watch polls until stack.best converges; still never pay.",
             "Bare say, offer, and sell still need --yes. Never pay or accept in walla.",
             "Sell: drop photos, ask data.questions, then publish with --yes only.",
+            "Sell --suggest prefills category from Wallapop steps when title is set.",
             "If only asked to look, do not send.",
             "Ambiguous match or multiple GRABs: ask once with candidates.",
             "Default search is all of Spain. Shipping is enough; do not fence on profile.km.",

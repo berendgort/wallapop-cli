@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "note": "After photo step, Wallapop may inject category_leaf_id from title+photos. suggested-item-data often returns empty HTTP 200.",
+  "after_photo": {
+    "step": {"id": "category", "components": []},
+    "draft": {
+      "title": "Escritorio madera oscura patas cromadas",
+      "category_leaf_id": "24208"
+    }
+  },
+  "after_loading": {
+    "step": {"id": "listing", "components": []},
+    "draft": {
+      "title": "Escritorio madera oscura patas cromadas",
+      "category_leaf_id": "24208",
+      "root_category_id": "12467"
+    }
+  },
+  "suggested_item_data": {
+    "http_status": 200,
+    "body": null
+  }
+}

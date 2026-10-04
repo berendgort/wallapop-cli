@@ -14,10 +14,11 @@ Do not ask the human to type buyer replies. Desk sends those.
 
 ```bash
 walla categories --find escritorio --json
-walla sell ./shot1.jpg ./shot2.jpg --json
+walla sell ./shot1.jpg ./shot2.jpg --title "Escritorio madera" --suggest --json
 ```
 
-Ask every question in `data.questions`, then publish once:
+`--suggest` (or draft with `--title` and no `--category`) asks Wallapop to prefill
+`category_leaf_id` from title+photos. Ask remaining `data.questions`, then:
 
 ```bash
 walla sell ./shot1.jpg ./shot2.jpg \
@@ -26,17 +27,17 @@ walla sell ./shot1.jpg ./shot2.jpg \
   --floor 35 --yes --json
 ```
 
-`--category` accepts a leaf id **or** name tokens (`escritorio`, `hogar/muebles`).
-`--root` is optional (derived from the leaf). `--floor` is the lowest EUR desk may
-accept. Omit it to hold the asking price.
+`--category` accepts a leaf id **or** name tokens. `--root` is optional.
+`--floor` is the lowest EUR desk may accept.
+
 Then:
 
 ```bash
-walla desk --json
+walla desk --watch --seconds 45 --rounds 12 --json
 ```
 
-Desk reads the inbox once and answers buyers. Repeat desk until `stack.best`
-is a sell row. Show the title, agreed EUR, `stack.why`, and the item link.
+Desk answers buyers until `stack.best` converges or rounds end. Show the title,
+agreed EUR, `stack.why`, and the item link.
 
 The human accepts the sale in the Wallapop app. `walla unsell <id> --yes` deletes
 a listing. Never mark the item sold from walla.

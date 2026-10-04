@@ -7,6 +7,7 @@ from typing import Any
 import typer
 
 from walla.account.desk import run_desk, run_pursue
+from walla.account.desk_watch import run_desk_watch
 from walla.cli.catch import run_cmd
 
 __all__ = ("register",)
@@ -28,10 +29,19 @@ def register(app: typer.Typer) -> None:
         run_cmd(_run, as_json=json)
 
     @app.command("desk")
-    def desk_cmd(json: bool = typer.Option(False, "--json")) -> None:
-        """Read the inbox once, answer open threads, summarize the best price."""
+    def desk_cmd(
+        watch: bool = typer.Option(
+            False, "--watch", help="Poll inbox until a price converges"
+        ),
+        seconds: float = typer.Option(45.0, "--seconds", help="Sleep between watch rounds"),
+        rounds: int = typer.Option(12, "--rounds", help="Max watch rounds (1..60)"),
+        json: bool = typer.Option(False, "--json"),
+    ) -> None:
+        """Read the inbox, answer open threads, summarize the best price."""
 
         def _run() -> dict[str, Any]:
+            if watch:
+                return run_desk_watch(seconds=seconds, rounds=rounds)
             return run_desk()
 
         run_cmd(_run, as_json=json)

@@ -13,6 +13,11 @@
 
 ![walla banner](docs/assets/walla-github-banner.jpg)
 
+![walla demo](docs/assets/walla-demo.mp4)
+
+Demo music: [Raising Me Higher](https://mixkit.co/free-stock-music/raising-me-higher-34/) by Ahjay Stelino
+([Mixkit Stock Music Free License](https://mixkit.co/license/#musicFree)).
+
 **walla** is an unofficial Wallapop.es **CLI + MCP + Python library** for Cursor
 agents and humans: search listings, negotiate, publish a listing, and follow the inbox.
 

@@ -1,6 +1,6 @@
 [project]
 name = "walla-cli"
-version = "0.1.8"
+version = "0.1.9"
 description = "Wallapop.es CLI - look · offer · talk · sell for humans and agents"
 authors = [{ name = "Dr. Berend Gort", email = "berend.gort@gmail.com" }]
 readme = "README.md"

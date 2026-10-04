@@ -14,6 +14,7 @@ from walla.account.sell_wire import (
     build_item_body,
     missing_sell_fields,
 )
+from walla.core.exceptions import WallaHTTPError
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = ROOT / "fixtures" / "sell_item_request.json"
@@ -130,6 +131,9 @@ def test_publish_listing_mocked(tmp_path: Path) -> None:
         {"step": {"id": "listing"}},
     ]
     fake_http.get.return_value = {}
+    listing = MagicMock()
+    listing.url = "https://es.wallapop.com/item/test-item-99"
+    listing.web_slug = "test-item-99"
     with (
         patch("walla.account.sell._auth_client", return_value=fake_http),
         patch("walla.account.sell.upload_pictures", return_value=1),
@@ -137,6 +141,7 @@ def test_publish_listing_mocked(tmp_path: Path) -> None:
             "walla.account.sell.create_listing",
             return_value={"id": "abc123", "flags": {}},
         ),
+        patch("walla.account.sell.get_item", return_value=listing),
     ):
         out = publish_listing(
             [photo],
@@ -150,6 +155,7 @@ def test_publish_listing_mocked(tmp_path: Path) -> None:
         )
     assert out["id"] == "abc123"
     assert out["photos"] == 1
+    assert out["url"] == "https://es.wallapop.com/item/test-item-99"
     assert fake_http.post.call_count == 5
 
 
@@ -217,6 +223,9 @@ def test_publish_listing_two_photos(tmp_path: Path) -> None:
     fake_resp.text = ""
     fake_session = MagicMock()
     fake_session.request.return_value = fake_resp
+    listing = MagicMock()
+    listing.url = "https://es.wallapop.com/item/test-item-99"
+    listing.web_slug = "test-item-99"
     with (
         patch("walla.account.sell._auth_client", return_value=fake_http),
         patch("walla.account.sell.upload_pictures", return_value=2),
@@ -224,6 +233,7 @@ def test_publish_listing_two_photos(tmp_path: Path) -> None:
             "walla.account.sell.create_listing",
             return_value={"id": "abc123", "flags": {}},
         ),
+        patch("walla.account.sell.get_item", return_value=listing),
         patch("walla.account.sell._auth_headers", return_value={}),
         patch("walla.account.sell.requests.Session", return_value=fake_session),
         patch("walla.account.sell.CurlMime") as mime_cls,
@@ -243,7 +253,25 @@ def test_publish_listing_two_photos(tmp_path: Path) -> None:
             weight_kg=2,
         )
     assert out["photos"] == 2
+    assert out["url"] == "https://es.wallapop.com/item/test-item-99"
     fake_session.request.assert_called()
+
+
+def test_public_item_url_uses_slug_not_hash() -> None:
+    from walla.account.sell import _public_item_url
+
+    listing = MagicMock()
+    listing.url = ""
+    listing.web_slug = "escritorio-madera-1309402890"
+    with patch("walla.account.sell.get_item", return_value=listing):
+        assert _public_item_url("x6qq0n82pe6y").endswith(
+            "/item/escritorio-madera-1309402890"
+        )
+    with patch(
+        "walla.account.sell.get_item",
+        side_effect=WallaHTTPError("down", status_code=500),
+    ):
+        assert _public_item_url("x6qq0n82pe6y").endswith("/item/x6qq0n82pe6y")
 
 
 def test_assert_item_body_errors() -> None:

@@ -11,10 +11,17 @@ from curl_cffi import CurlMime, requests
 
 from walla.account.login import ensure_access_token
 from walla.account.sell_wire import build_item_body
-from walla.core.exceptions import WallaHTTPError, WallaUnsupportedError
+from walla.core.exceptions import (
+    WallaHTTPError,
+    WallaNotFoundError,
+    WallaParseError,
+    WallaUnsupportedError,
+)
 from walla.http.client import HttpClient
-from walla.http.headers import API_BASE, default_headers
+from walla.http.headers import API_BASE, WEB_BASE, default_headers
 from walla.http.polite import wait_turn
+from walla.search.api import get_item
+from walla.search.parse import item_url
 
 __all__ = (
     "create_listing",
@@ -188,9 +195,30 @@ def publish_listing(
         **created,
         "upload_id": upload_id,
         "title": title.strip()[:50],
-        "url": f"https://es.wallapop.com/item/{created['id']}",
+        "url": _public_item_url(str(created["id"])),
         "photos": len(paths),
     }
+
+
+def _public_item_url(item_id: str) -> str:
+    """Wallapop web needs the slug path, not the opaque item hash."""
+    try:
+        listing = get_item(item_id)
+    except (
+        WallaHTTPError,
+        WallaNotFoundError,
+        WallaParseError,
+        WallaUnsupportedError,
+        ValueError,
+        KeyError,
+        TypeError,
+    ):
+        return f"{WEB_BASE}/item/{item_id}"
+    if listing.url:
+        return listing.url
+    if listing.web_slug:
+        return item_url(listing.web_slug)
+    return f"{WEB_BASE}/item/{item_id}"
 
 
 def _upload_extra_pictures(item_id: str, photos: list[Path]) -> None:

@@ -13,7 +13,7 @@
 
 ![walla demo](docs/assets/walla-demo.mp4)
 
-Demo music: [Raising Me Higher](https://mixkit.co/free-stock-music/raising-me-higher-34/) by Ahjay Stelino
+Demo music: [Funkee Monkeee](https://mixkit.co/free-stock-music/funkee-monkeee-1140/) by Michael Ramir C.
 ([Mixkit Stock Music Free License](https://mixkit.co/license/#musicFree)).
 
 **walla** turns Claude, GPT, or Cursor into a Wallapop helper that actually

@@ -198,6 +198,19 @@
       "ok_status": [200, 201, 204]
     },
     {
+      "id": "sell_edit",
+      "cli": "edit",
+      "method": "PUT",
+      "path": "/api/v3/items/{id}",
+      "needle": "/api/v3/items/",
+      "auth": true,
+      "accept": "application/vnd.upload-v2+json",
+      "signed": true,
+      "ok_status": [200, 201, 204],
+      "fixture": "edit_item_request.json",
+      "known_bad": [{"status": 404, "cause": "missing X-Signature / upload-v2 Accept"}]
+    },
+    {
       "id": "unsell",
       "cli": "unsell",
       "method": "DELETE",

@@ -1,0 +1,49 @@
+{
+  "endpoint": "PUT /api/v3/items/{id}",
+  "accept": "application/vnd.upload-v2+json",
+  "auth": "Bearer + X-Signature + Timestamp",
+  "signature": {
+    "message": "PUT|{absolute_url}|{timestamp_ms}|",
+    "note": "HMAC-SHA256 with Wallapop consumer key; required for edit"
+  },
+  "required_keys": [
+    "attributes",
+    "category_leaf_id",
+    "apply_discount",
+    "delivery",
+    "location",
+    "pictures"
+  ],
+  "attribute_required_keys": [
+    "title",
+    "description",
+    "price_amount",
+    "condition"
+  ],
+  "example": {
+    "attributes": {
+      "title": "TEST walla CLI edit - borrar",
+      "description": "Anuncio de prueba edit. NO COMPRAR.",
+      "price_amount": 9,
+      "condition": "good"
+    },
+    "category_leaf_id": "10105",
+    "apply_discount": false,
+    "delivery": {
+      "allowed_by_user": false,
+      "max_weight_kg": null,
+      "cost_configuration_id": null
+    },
+    "location": {
+      "latitude": 41.3874,
+      "longitude": 2.1686,
+      "approximated": true
+    },
+    "pictures": [
+      {
+        "id": 0,
+        "order": 0
+      }
+    ]
+  }
+}

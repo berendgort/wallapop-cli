@@ -11,7 +11,7 @@ import typer
 from walla.cli.catch import run_cmd
 from walla.hunter.export import load_last_search, save_last_search, write_exports
 from walla.hunter.profile_store import load_profile
-from walla.hunter.shortlist import PRESENT_RULE, rank_shortlist
+from walla.hunter.shortlist import PRESENT_RULE, soft_shortlist
 from walla.hunter.verdict import geo_scope, score_listing
 from walla.hunter.watches import (
     Watch,
@@ -71,7 +71,9 @@ def register(app: typer.Typer) -> None:
                 "must_match": profile.must_match,
             }
             save_last_search(keywords=keywords, listings=rows, mandate=mandate)
-            shortlist = rank_shortlist(rows)
+            shortlist, mandate_note = soft_shortlist(
+                rows, must_match=list(profile.must_match)
+            )
             payload: dict[str, Any] = {
                 "count": len(rows),
                 "next_page": result.next_page,
@@ -91,6 +93,12 @@ def register(app: typer.Typer) -> None:
                     ),
                 },
             }
+            if mandate_note is not None:
+                payload["mandate_note"] = mandate_note
+                payload["hitl"]["next"] = (
+                    "must_match emptied the hard shortlist; showing soft fallback. "
+                    + str(mandate_note.get("how") or "")
+                )
             if export:
                 payload["exported"] = write_exports(
                     rows,

@@ -57,7 +57,9 @@ Ranks: models 10 → exceptions 15 → http 20 → core 30 → search/account/hu
 
 - **Do** keep files <= 250 LOC.
 - **Do** fail closed; typed `error_type`.
-- **Do** require `--yes` for bare say/offer/sell/unsell. `pursue` and `desk` send negotiation chat without a per-message prompt. Never pay.
+- **Do** require `--yes` for bare say/offer/sell/unsell/edit. `pursue` and `desk` send negotiation chat without a per-message prompt. Never pay.
+- **Do** use `walla edit <id> --eur N --yes` to change price/desc (no unsell+republish).
+- **Do** pass leaf id or `motor accesorios` when `--category Accesorios` is ambiguous.
 - **Don't** commit session.json, cookies, or tokens.
 - **Don't** invent wire shapes without a fixture.
 - **Don't** post buyer offers as `{item_id, amount, currency}` (HTTP 400).
@@ -65,3 +67,5 @@ Ranks: models 10 → exceptions 15 → http 20 → core 30 → search/account/hu
 - **Don't** create listings without `Accept: application/vnd.upload-v2+json`
   (HTTP 405). Use `walla sell` / `fixtures/sell_item_request.json`.
 - **Don't** require `.env` credentials; login is cookie paste.
+- **Don't** leave a sticky `must_match` from a prior hunt; clear with
+  `walla setup --must ''` or expect `mandate_note` soft shortlist fallback.

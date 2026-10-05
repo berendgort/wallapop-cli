@@ -35,6 +35,42 @@
               ]
             }
           ]
+        },
+        {
+          "id": 12484,
+          "name": "Cocina",
+          "parent_id": 12467,
+          "subcategories": [
+            {
+              "id": 24235,
+              "name": "Accesorios",
+              "parent_id": 12484,
+              "subcategories": []
+            }
+          ]
+        }
+      ],
+      "category_leaf_selection_mandatory": false
+    },
+    {
+      "id": 12800,
+      "name": "Motor y accesorios",
+      "path": "",
+      "vertical_id": "consumer_goods",
+      "icon": "engine",
+      "subcategories": [
+        {
+          "id": 10167,
+          "name": "Recambios de coches y furgonetas",
+          "parent_id": 12800,
+          "subcategories": [
+            {
+              "id": 10328,
+              "name": "Accesorios",
+              "parent_id": 10167,
+              "subcategories": []
+            }
+          ]
         }
       ],
       "category_leaf_selection_mandatory": false

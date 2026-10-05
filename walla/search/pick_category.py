@@ -44,4 +44,26 @@ def pick_sell_category(
             name=best.name,
             is_leaf=best.is_leaf,
         )
+    _reject_ambiguous_name(text, hits)
     return best
+
+
+def _reject_ambiguous_name(query: str, hits: list[CategoryHit]) -> None:
+    """Fail closed when one bare leaf name maps to several roots."""
+    tokens = [t for t in query.lower().replace("/", " ").split() if t]
+    if len(tokens) != 1:
+        return
+    needle = tokens[0]
+    exact = [
+        h
+        for h in hits
+        if h.is_leaf and h.name.lower() == needle
+    ]
+    roots = {h.root_id for h in exact}
+    if len(roots) <= 1:
+        return
+    sample = "; ".join(f"{h.path} leaf={h.leaf_id}" for h in exact[:6])
+    raise ValueError(
+        f"ambiguous category {query!r} spans roots; pass leaf id or "
+        f"disambiguate (e.g. 'motor accesorios'): {sample}"
+    )

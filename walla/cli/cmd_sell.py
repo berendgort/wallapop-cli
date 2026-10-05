@@ -8,6 +8,7 @@ from typing import Any
 import typer
 
 from walla.account.sell import delete_listing, publish_listing, publish_prepared
+from walla.account.sell_photos import prepare_sell_photos
 from walla.account.sell_suggest import suggest_from_photos
 from walla.account.sell_wire import CONDITIONS, SELL_QUESTIONS, missing_sell_fields
 from walla.cli.catch import run_cmd
@@ -22,7 +23,7 @@ __all__ = ("register",)
 def register(app: typer.Typer) -> None:
     @app.command("sell")
     def sell_cmd(
-        photos: list[Path] = typer.Argument(..., help="JPEG/PNG/WebP paths"),
+        photos: list[Path] = typer.Argument(..., help="JPEG/PNG/WebP/HEIC paths"),
         title: str | None = typer.Option(None, "--title"),
         description: str | None = typer.Option(None, "--description", "--desc"),
         eur: float | None = typer.Option(None, "--eur"),
@@ -49,10 +50,7 @@ def register(app: typer.Typer) -> None:
         """Draft or publish a consumer-goods listing from photos (Vender)."""
 
         def _run() -> dict[str, Any]:
-            paths = [p.expanduser() for p in photos]
-            for p in paths:
-                if not p.is_file():
-                    raise ValueError(f"photo not found: {p}")
+            paths = prepare_sell_photos([p.expanduser() for p in photos])
             title_use = title
             leaf = category
             root_id = root

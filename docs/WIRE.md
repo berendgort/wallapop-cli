@@ -81,14 +81,25 @@ Browser: `https://es.wallapop.com/app/catalog/upload/consumer-goods`.
 8. Create: `POST /api/v3/items` multipart `image` + `item` (JSON string).
    Header **`Accept: application/vnd.upload-v2+json`** (without it → HTTP 405).
    Extra photos: `POST /api/v3/items/{id}/picture2` multipart `image` + `order`.
-9. Delete: `DELETE /api/v3/items/{id}` → 204.
+9. Edit owned item: `PUT /api/v3/items/{id}` JSON body (same attribute shape as
+   create, plus `pictures: [{id, order}]`). Headers: Bearer,
+   **`Accept: application/vnd.upload-v2+json`**, **`X-Signature`** +
+   **`Timestamp`** (HMAC of `PUT|{absolute_url}|{ts_ms}|`). HTTP **204**.
+   Fixture: `fixtures/edit_item_request.json` / `walla.account.sell_edit_wire`.
+   CLI: `walla edit <id> --eur N --desc '…' --yes`.
+10. Delete: `DELETE /api/v3/items/{id}` → 204.
 
 Fixture: `fixtures/sell_item_request.json` / `walla.account.sell_wire.build_item_body`.
+HEIC/HEIF sell photos are converted to JPEG via ImageMagick (`magick`/`convert`)
+in `walla.account.sell_photos` before upload.
 
 Every CLI call (method, path, auth, body) is listed in `fixtures/wire_contracts.json`.
 `scripts/check_code_quality.py` fails if `walla/account`, `walla/search`, or `walla/http`
 grows a `/api/` or `/bff/` literal that the catalog does not list.
 CLI: `walla sell photo.jpg … --yes` (draft without `--yes`).
+Bare `Accesorios` is ambiguous across Motor / Cocina — pass leaf id or
+`motor accesorios`. Sticky `must_match` that empties a shortlist triggers a soft
+fallback + `mandate_note` (`walla setup --must ''` to clear).
 
 Writes that fail closed as `error_type: unsupported` until fixtures exist.
 

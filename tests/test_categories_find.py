@@ -48,6 +48,17 @@ def test_pick_by_name_and_id() -> None:
     assert forced.root_id == "12579"
 
 
+def test_accesorios_ambiguous_unless_disambiguated() -> None:
+    roots = _roots()
+    with pytest.raises(ValueError, match="ambiguous"):
+        pick_sell_category(roots, category="Accesorios")
+    motor = pick_sell_category(roots, category="motor accesorios")
+    assert motor.leaf_id == "10328"
+    assert motor.root_id == "12800"
+    by_id = pick_sell_category(roots, category="10328")
+    assert by_id.leaf_id == "10328"
+
+
 def test_find_empty_and_unknown() -> None:
     with pytest.raises(ValueError, match="empty"):
         find_categories(_roots(), "   ")

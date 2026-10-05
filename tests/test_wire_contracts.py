@@ -17,6 +17,7 @@ from walla.account.inbox import list_conversations_raw
 from walla.account.login import login_password, mint_access_token, refresh_session, whoami
 from walla.account.offer_wire import assert_offer_body
 from walla.account.sell import delete_listing, publish_listing
+from walla.account.sell_edit import edit_listing
 from walla.account.sell_wire import assert_item_body, build_item_body
 from walla.core.exceptions import WallaAuthError, WallaHTTPError, WallaUnsupportedError
 from walla.http.client import HttpClient
@@ -244,6 +245,20 @@ def test_every_contract_is_sent(
     monkeypatch.setattr("walla.account.sell.requests.Session", lambda: _Sess())
     monkeypatch.setattr("walla.account.sell.CurlMime.addpart", _addpart)
     monkeypatch.setattr("walla.account.sell.CurlMime.close", lambda _s: None)
+    monkeypatch.setattr("walla.account.sell_edit.requests.request", _Sess().request)
+    monkeypatch.setattr(
+        "walla.account.sell_edit.fetch_owned_item",
+        lambda _id: {
+            "title": {"original": "Cofre test"},
+            "description": {"original": "desc"},
+            "price": {"cash": {"amount": 79.0}},
+            "type_attributes": {"condition": {"value": "good"}},
+            "taxonomy": [{"id": 10328}],
+            "location": {"latitude": 41.39, "longitude": 2.17},
+            "shipping": {"user_allows_shipping": False},
+            "images": [{"id": 1}],
+        },
+    )
     sess = SessionData(
         access_token="tok",
         device_id="dev-contract",
@@ -302,6 +317,9 @@ def test_every_contract_is_sent(
         lon=2.17,
     )
     assert created["id"] == "item123"
+    edited = edit_listing("item123", price_eur=49.0)
+    assert edited["edited"] is True
+    assert edited["price_eur"] == 49.0
     delete_listing("item123", client=rec)
 
     item_parts = [

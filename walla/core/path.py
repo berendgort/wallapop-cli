@@ -11,6 +11,8 @@ __all__ = (
     "profile_path",
     "pursuits_path",
     "session_path",
+    "teach_dir",
+    "teach_state_path",
     "watches_path",
 )
 
@@ -40,3 +42,11 @@ def last_search_path() -> Path:
 
 def pursuits_path() -> Path:
     return config_dir() / "pursuits.json"
+
+
+def teach_dir() -> Path:
+    return config_dir() / "teach"
+
+
+def teach_state_path() -> Path:
+    return config_dir() / "teach.json"

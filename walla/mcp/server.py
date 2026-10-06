@@ -183,4 +183,26 @@ def build_server() -> Any:
     def me() -> dict[str, Any]:
         return _wrap(whoami)
 
+    @mcp.tool()
+    def teach(
+        text: str,
+        name: str | None = None,
+        method: str | None = None,
+        confirm: bool = False,
+    ) -> dict[str, Any]:
+        """Park a redacted transcript; with method+confirm, open a GitHub PR."""
+        from pathlib import Path
+
+        from walla.core.teach import park_transcript
+        from walla.core.teach_pr import ship_pr
+
+        def _run() -> dict[str, Any]:
+            parked = park_transcript(text, name=name)
+            if not method:
+                return parked
+            pr = ship_pr(Path(str(parked["path"])), method=method, yes=confirm)
+            return {**parked, "pr": pr}
+
+        return _wrap(_run)
+
     return mcp

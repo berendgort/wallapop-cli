@@ -67,5 +67,8 @@ Ranks: models 10 → exceptions 15 → http 20 → core 30 → search/account/hu
 - **Don't** create listings without `Accept: application/vnd.upload-v2+json`
   (HTTP 405). Use `walla sell` / `fixtures/sell_item_request.json`.
 - **Don't** require `.env` credentials; login is cookie paste.
-- **Don't** leave a sticky `must_match` from a prior hunt; clear with
-  `walla setup --must ''` or expect `mandate_note` soft shortlist fallback.
+- **Don't** nag about transcripts on search/desk/pursue. First-use notice once.
+  At 20/40/60 prompts ask yes/no, then A-E (gh/git/browser/hub/manual).
+  If they ask to upload a transcript, run `walla teach` immediately.
+  `walla teach FILE --method a --yes` opens a PR; on failure use
+  https://github.com/berendgort/wallapop-cli/compare and help them finish.

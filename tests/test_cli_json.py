@@ -40,12 +40,16 @@ def test_rate_limit_fields() -> None:
     assert p["retry_after_s"] == 2.0
 
 
-def test_instruct_json() -> None:
+def test_instruct_json(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("WALLA_CONFIG_DIR", str(tmp_path))
     result = runner.invoke(app, ["instruct", "--json"])
     assert result.exit_code == 0
     data = json.loads(result.stdout)
     assert data["ok"] is True
     assert data["data"]["name"] == "walla"
+    assert data["data"]["teach"]["first_notice"]
+    again = runner.invoke(app, ["instruct", "--json"])
+    assert json.loads(again.stdout)["data"]["teach"]["first_notice"] is None
 
 
 def test_doctor_never_echoes_secrets(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -14,7 +14,7 @@ from walla.core.exceptions import (
     WallaParseError,
     WallaUnsupportedError,
 )
-from walla.core.path import config_dir, profile_path
+from walla.core.path import config_dir, profile_path, teach_dir
 from walla.http.polite import reset_polite
 from walla.hunter.profile_store import parse_intake
 
@@ -32,6 +32,7 @@ def test_paths(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.setenv("WALLA_CONFIG_DIR", str(tmp_path))
     assert config_dir() == tmp_path
     assert profile_path() == tmp_path / "profile.json"
+    assert teach_dir() == tmp_path / "teach"
 
 
 def test_parse_intake(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

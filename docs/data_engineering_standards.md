@@ -15,8 +15,9 @@ Code shape: [`code_quality.md`](code_quality.md). Wire truth: [`WIRE.md`](WIRE.m
 
 | Mode | What | Mutability | Clock |
 |---|---|---|---|
-| Working | `profile.json`, `watches.json`, `session.json` | mutable | user lifetime |
+| Working | `profile.json`, `watches.json`, `session.json`, `teach.json` | mutable | user lifetime |
 | Archive | redacted fixtures under `fixtures/` | append on capture | repo life |
+| Teach drop | `~/.config/walla/teach/*.md` | append | user opt-in |
 | Live | `api.wallapop.com` responses | read | request |
 
 There is no database in v1. Do not stand up Postgres, Redis, or a second
@@ -37,6 +38,7 @@ file for the same fields is a defect.
 - Profile: one home point, one search radius, one pickup radius.
 - Watch: one keyword query + optional filters; seen listing ids are a set.
 - Session: tokens / cookie fields only. Never the password.
+- Teach: `teach.json` (first-notice clock) and one redacted file per `walla teach`.
 - Fixture: one captured response shape, secrets redacted, `schema_version` in
   the companion parser module docstring.
 

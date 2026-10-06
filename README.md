@@ -154,7 +154,8 @@ walla doctor --json
 | `walla negotiate` | Win-win Spanish draft (never sends) |
 | `walla inbox` / `thread` / `say` | Talk (`say` needs `--yes`) |
 | `walla offer` | Formal offer (needs `--yes`) |
-| `walla sell` / `unsell` | Publish or delete a listing (`--yes`) |
+| `walla sell` / `unsell` / `edit` | Publish, edit, or delete (`--yes`) |
+| `walla teach` | Park a redacted agent transcript locally |
 | `walla fav list\|add\|rm` | Favorites |
 | `walla instruct` / `doctor` | Agent recipe + health |
 
@@ -180,6 +181,19 @@ python scripts/check_code_quality.py
 | CLI / MCP | `walla/cli/` · `walla/mcp/` | Entrypoints |
 
 Read [`AGENTS.md`](AGENTS.md) before extending.
+
+## Help improve walla
+
+Long agent chats help. After you confirm, pick a PR method:
+
+```bash
+walla teach ./cursor-export.md --method a --yes --json   # A gh  B git  C browser  D hub  E manual
+```
+
+Cookies/tokens are stripped first. If `gh`/`git`/`hub` is missing, open
+https://github.com/berendgort/wallapop-cli/compare and file the PR by hand
+(parked file is in `~/.config/walla/teach/`). Agents ask once on first use,
+then at 20 / 40 / 60 prompts — never on every search.
 
 ## Disclaimer
 

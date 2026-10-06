@@ -10,6 +10,7 @@ from walla import __version__
 from walla.account.session_store import load_session
 from walla.cli.catch import run_cmd
 from walla.core.instruct import instruct_recipe
+from walla.core.teach import teach_payload
 from walla.hunter.profile_store import load_profile, parse_intake, save_profile
 
 __all__ = ("register",)
@@ -37,7 +38,7 @@ def register(app: typer.Typer) -> None:
             except Exception:  # noqa: BLE001
                 reachable = False
             has_session = bool(sess and (sess.access_token or sess.session_cookie))
-            return {
+            out: dict[str, Any] = {
                 "version": __version__,
                 "network": {"reachable": reachable},
                 "auth": {
@@ -46,6 +47,10 @@ def register(app: typer.Typer) -> None:
                 },
                 "profile": {"ready": profile.ready, "label": profile.label},
             }
+            notice = teach_payload()
+            if notice.get("first_notice"):
+                out["teach"] = notice
+            return out
 
         run_cmd(_run, as_json=json)
 

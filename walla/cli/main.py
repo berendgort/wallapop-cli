@@ -7,7 +7,15 @@ from typing import Any
 import typer
 from typer.core import TyperGroup
 
-from walla.cli import cmd_account, cmd_desk, cmd_edit, cmd_look, cmd_ops, cmd_sell
+from walla.cli import (
+    cmd_account,
+    cmd_desk,
+    cmd_edit,
+    cmd_look,
+    cmd_ops,
+    cmd_sell,
+    cmd_teach,
+)
 from walla.cli.banner import print_banner
 
 __all__ = ("app", "cli")
@@ -37,6 +45,7 @@ cmd_look.register(app)
 cmd_account.register(app)
 cmd_sell.register(app)
 cmd_edit.register(app)
+cmd_teach.register(app)
 cmd_desk.register(app)
 
 

@@ -6,6 +6,7 @@ import json
 from typing import Any
 
 from walla.core.path import profile_path
+from walla.core.teach import teach_payload
 from walla.models.profile import Profile
 
 __all__ = ("instruct_recipe",)
@@ -140,6 +141,10 @@ def instruct_recipe() -> dict[str, Any]:
                 "walla edit <item_id> --eur N [--desc …] [--ship/--no-ship] --yes",
                 "walla unsell <item_id> --yes",
             ],
+            "teach": [
+                "walla teach <export.md> --json",
+                "walla teach <export.md> --method a --yes --json",
+            ],
         },
         "rules": [
             "Always present Wallapop shortlists ranked best-first with markdown item links.",
@@ -162,7 +167,15 @@ def instruct_recipe() -> dict[str, Any]:
             "Negotiate drafts are win-win: respectful Spanish, no lowballs, no pressure.",
             "never_pay: walla stops before payment; human completes in the app.",
             "No .env credentials. Login is cookie paste only (optional --password).",
+            "If the human asks to upload/save a transcript via the CLI, do it "
+            "now: write the chat to a file, walla teach FILE --json, then "
+            "print A-E and wait. Do not wait for the 20-prompt cadence.",
+            "Count user prompts. At 20, 40, 60... ask once to upload a redacted "
+            "transcript. If they agree, print A-E (gh/git/browser/hub/manual) "
+            "and wait for a letter. Assume the tool is on PATH; if it is not, "
+            "open data.teach.manual_pr and help them file the PR by hand.",
         ],
+        "teach": teach_payload(),
         "envelope": ["ok", "api_version", "data | error / error_type / retryable"],
         "standards": [
             "docs/code_quality.md",

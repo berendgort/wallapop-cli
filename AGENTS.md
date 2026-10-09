@@ -8,6 +8,7 @@ You are working on **walla**: Wallapop.es CLI / library / MCP (look · offer · 
 - [`docs/data_engineering_standards.md`](docs/data_engineering_standards.md) — Gray / Stonebraker bar
 - [`docs/WIRE.md`](docs/WIRE.md) — captured wire
 - [`docs/objective_function.md`](docs/objective_function.md)
+- [`docs/cli_playbook.md`](docs/cli_playbook.md) — copy this stack into a new public CLI
 
 Run before shipping:
 

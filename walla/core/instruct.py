@@ -19,9 +19,10 @@ def instruct_recipe() -> dict[str, Any]:
         "tagline": "look · offer · talk · sell",
         "example": (
             "Human: find a used kite under 400eur and negotiate. "
-            "Agent: walla pursue \"kite\" --json, then walla desk --json "
-            "until stack.best is set. Present the why and the item link. "
-            "Do not ask the human to send messages. Human closes in the app."
+            "Agent: walla pursue \"kite\" --json, then walla desk --json. "
+            "Answer their questions like a person. Do not force a close "
+            "on every reply. Present the why and the item link when a "
+            "price agrees. Human finishes in the app when ready."
         ),
         "mandate": {
             "budget": profile.spend_cap,
@@ -64,8 +65,10 @@ def instruct_recipe() -> dict[str, Any]:
                 {
                     "step": "desk",
                     "agent": (
-                        "walla desk --json reads the inbox once, replies, "
-                        "and returns stack.best plus why. Repeat until a price agrees."
+                        "walla desk --json reads the inbox once and advances "
+                        "price threads. If they asked a question, desk waits: "
+                        "answer with walla say in their words. No 'cerramos "
+                        "en la app' on every turn. Repeat until a price agrees."
                     ),
                     "ask_human": "never for the messages",
                 },
@@ -165,6 +168,9 @@ def instruct_recipe() -> dict[str, Any]:
             "Refuse in-person offers outside pickup radius.",
             "Refuse offer_eur above mandate.budget.",
             "Negotiate drafts are win-win: respectful Spanish, no lowballs, no pressure.",
+            "Talk like a person (Carnegie): answer their question first. "
+            "Never append 'cerramos en la app' or push a close on every reply. "
+            "Let them choose the next step.",
             "never_pay: walla stops before payment; human completes in the app.",
             "No .env credentials. Login is cookie paste only (optional --password).",
             "If the human asks to upload/save a transcript via the CLI, do it "

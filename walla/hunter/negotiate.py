@@ -28,6 +28,9 @@ BANNED_PHRASES = (
     "otros interesados",
     "tengo otra oferta",
     "take it or leave",
+    "cerramos en la app",
+    "lo cerramos",
+    "si si, lo cerramos",
 )
 
 _AGGRESSION_PCT: dict[Aggression, float] = {
@@ -205,6 +208,7 @@ def _tone_checks(opening: str, offer_line: str, offer: float, ask: float) -> lis
         "first_offer_ge_80pct_ask",
         "draft_only_needs_confirm",
         "never_pay_in_walla",
+        "no_forced_close",
     ]
     if any(p in blob for p in BANNED_PHRASES):
         checks.append("FAIL_banned_phrase")

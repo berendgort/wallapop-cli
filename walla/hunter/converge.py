@@ -24,6 +24,14 @@ _DEJO = re.compile(
     re.IGNORECASE,
 )
 _ACCEPT = re.compile(r"\b(vale|hecho|acepto|de acuerdo|perfecto|cerrado|trato)\b", re.IGNORECASE)
+_QUESTION = re.compile(
+    r"[?¿]|\b("
+    r"medidas?|capacidad|marca|modelo|incluye|llevan?|tiene|"
+    r"cu[aá]nto|cu[aá]ndo|d[oó]nde|c[oó]mo|qu[eé]|qui[eé]n|"
+    r"disponible|envio|env[ií]o|recogida|fotos?"
+    r")\b",
+    re.IGNORECASE,
+)
 
 
 class Move(BaseModel):
@@ -42,7 +50,7 @@ def next_move(pursuit: Pursuit, messages: list[Message]) -> Move:
             action="converged",
             agreed_eur=pursuit.agreed_eur,
             offer_eur=pursuit.offer_eur,
-            why=pursuit.why or "Already agreed. Close it in the app.",
+            why=pursuit.why or "Already agreed. Human finishes in the app when ready.",
             nudges=pursuit.nudges,
         )
     if pursuit.status == "walked":
@@ -81,12 +89,26 @@ def next_move(pursuit: Pursuit, messages: list[Message]) -> Move:
     price = _latest_price(fresh)
     if price is not None:
         return _on_price(pursuit, price)
-    if _accepts(" ".join(m.text for m in fresh)):
+    fresh_text = " ".join(m.text for m in fresh)
+    if _accepts(fresh_text):
         return Move(
             action="converged",
             agreed_eur=pursuit.offer_eur,
             offer_eur=pursuit.offer_eur,
-            why=f"They accepted {_fmt(pursuit.offer_eur)} EUR. Close it in the app.",
+            why=(
+                f"They accepted {_fmt(pursuit.offer_eur)} EUR. "
+                "Stop pitching. Human finishes in the app when ready."
+            ),
+            nudges=pursuit.nudges,
+        )
+    if _asks_question(fresh_text):
+        return Move(
+            action="wait",
+            offer_eur=pursuit.offer_eur,
+            why=(
+                "They asked a question. Answer it in their words. "
+                "Do not push a price close."
+            ),
             nudges=pursuit.nudges,
         )
     if pursuit.nudges >= 1:
@@ -101,7 +123,7 @@ def next_move(pursuit: Pursuit, messages: list[Message]) -> Move:
         action="send",
         text=text,
         offer_eur=pursuit.offer_eur,
-        why="They wrote, but named no price. One nudge, then wait.",
+        why="They wrote without a number. Soft ask once, then wait.",
         nudges=pursuit.nudges + 1,
     )
 
@@ -115,7 +137,7 @@ def _on_price(pursuit: Pursuit, price: float) -> Move:
             offer_eur=pursuit.offer_eur,
             why=(
                 f"They named {_fmt(price)} EUR, within the {_fmt(ceiling)} ceiling. "
-                "Stop writing. Close it in the app."
+                "Stop writing. Human finishes in the app when ready."
             ),
             nudges=pursuit.nudges,
         )
@@ -126,7 +148,7 @@ def _on_price(pursuit: Pursuit, price: float) -> Move:
             offer_eur=pursuit.offer_eur,
             why=(
                 f"Buyer named {_fmt(price)} EUR, at or above the {_fmt(ceiling)} floor. "
-                "Stop writing. Accept it in the app."
+                "Stop writing. Human accepts in the app when ready."
             ),
             nudges=pursuit.nudges,
         )
@@ -192,6 +214,10 @@ def _accepts(text: str) -> bool:
     return _ACCEPT.search(text) is not None
 
 
+def _asks_question(text: str) -> bool:
+    return _QUESTION.search(text) is not None
+
+
 def _opening(pursuit: Pursuit) -> str:
     thing = " ".join(pursuit.title.split()[:6])[:60]
     eur = _fmt(pursuit.offer_eur)
@@ -205,14 +231,16 @@ def _opening(pursuit: Pursuit) -> str:
 
 def _nudge(pursuit: Pursuit) -> str:
     eur = _fmt(pursuit.offer_eur)
-    return f"Gracias. ¿Te encaja {eur} €? Si sí, lo cerramos en la app."
+    if pursuit.side == "sell":
+        return f"Gracias por escribir. El precio es {eur} €. ¿Te encaja?"
+    return f"Gracias. ¿Te vendría bien {eur} €?"
 
 
 def _counter(pursuit: Pursuit, eur: float) -> str:
     n = _fmt(eur)
     if pursuit.side == "sell":
-        return f"Gracias. Te lo puedo dejar en {n} €. Si te encaja lo cerramos en la app."
-    return f"Gracias por contestar. Puedo llegar a {n} €. Si te encaja lo cerramos en la app."
+        return f"Gracias. Te lo puedo dejar en {n} €. ¿Qué te parece?"
+    return f"Gracias por contestar. Puedo llegar a {n} €. ¿Te parece bien?"
 
 
 def _fmt(n: float) -> str:

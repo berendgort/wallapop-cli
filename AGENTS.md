@@ -59,6 +59,7 @@ Ranks: models 10 → exceptions 15 → http 20 → core 30 → search/account/hu
 - **Do** keep files <= 250 LOC.
 - **Do** fail closed; typed `error_type`.
 - **Do** require `--yes` for bare say/offer/sell/unsell/edit. `pursue` and `desk` send negotiation chat without a per-message prompt. Never pay.
+- **Do** talk like a person. Answer their question first. Never append "cerramos en la app" or force a close on every reply.
 - **Do** use `walla edit <id> --eur N --yes` to change price/desc (no unsell+republish).
 - **Do** pass leaf id or `motor accesorios` when `--category Accesorios` is ambiguous.
 - **Don't** commit session.json, cookies, or tokens.

@@ -31,4 +31,4 @@ walla setup --lat 41.39 --lon 2.17 --km 30 --budget 400 \
 | Find items, message sellers, follow the inbox, pick a price | `skills/walla-buy/SKILL.md` |
 | Publish a listing, answer buyers, pick a price | `skills/walla-sell/SKILL.md` |
 
-The human closes the deal in the Wallapop app. walla never pays and never taps Accept.
+Talk like a person: answer their question, then stop. Do not push "cerramos en la app" on every reply. The human finishes in the Wallapop app when ready. walla never pays and never taps Accept.

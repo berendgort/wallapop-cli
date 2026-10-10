@@ -72,6 +72,33 @@ def test_counter_steps_up_but_not_over_ceiling() -> None:
     assert move.action == "send"
     assert move.offer_eur == 175
     assert "175" in move.text
+    assert "cerramos" not in move.text.lower()
+    assert "en la app" not in move.text.lower()
+
+
+def test_question_waits_without_forced_close() -> None:
+    sale = _buy(side="sell", ask_eur=79, offer_eur=79, walk_away_eur=79, status="waiting")
+    move = next_move(
+        sale,
+        [
+            _msg("Hola, sigue disponible", mine=True, at=1),
+            _msg("¿Me podrías decir las medidas exactas?", mine=False, at=2),
+        ],
+    )
+    assert move.action == "wait"
+    assert "question" in move.why.lower()
+    assert move.text == ""
+
+
+def test_soft_nudge_has_no_app_close() -> None:
+    move = next_move(
+        _buy(),
+        [_msg("Te propongo 164 €", mine=True, at=1), _msg("ok gracias", mine=False, at=2)],
+    )
+    assert move.action == "send"
+    assert "164" in move.text
+    assert "cerramos" not in move.text.lower()
+    assert "en la app" not in move.text.lower()
 
 
 def test_vale_converges_and_no_does_not() -> None:

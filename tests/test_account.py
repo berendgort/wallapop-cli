@@ -128,3 +128,42 @@ def test_make_offer_confirm_and_wire(
             assert body["offer_price_amount"] == 40
             assert body["offer_price_currency"] == "EUR"
             assert body["offer_id"] == out["offer_id"]
+
+
+def _near_item() -> Listing:
+    return Listing(
+        id="1",
+        title="Near",
+        price=Money(amount=50, currency="EUR"),
+        web_slug="near",
+        url="https://es.wallapop.com/item/near",
+        shippable=True,
+        user_allows_shipping=True,
+        location=ListingLocation(latitude=41.39, longitude=2.17),
+    )
+
+
+def test_make_offer_daily_limit_and_token_retry(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from walla.account.actions import make_offer
+    from walla.core.exceptions import WallaHTTPError, WallaRateLimitError
+
+    monkeypatch.setenv("WALLA_CONFIG_DIR", str(tmp_path))
+    save_profile(Profile(lat=41.39, lon=2.17, pickup_km=50), path=tmp_path / "profile.json")
+    limit = WallaHTTPError(
+        'HTTP 409: [{"error_code":"max offers per day exceed"}]', status_code=409
+    )
+    expired = WallaHTTPError('HTTP 401: {"code":"ACCESS_TOKEN_EXPIRED"}', status_code=401)
+    with patch("walla.account.actions.get_item", return_value=_near_item()):
+        with patch("walla.account.actions._auth_client") as auth:
+            auth.return_value = MagicMock(post=MagicMock(side_effect=limit))
+            with pytest.raises(WallaRateLimitError, match="daily offer limit"):
+                make_offer("1", 40, confirm=True)
+            auth.return_value = MagicMock(post=MagicMock(side_effect=expired))
+            with patch("walla.account.actions.refresh_session") as refresh, patch(
+                "walla.account.actions.HttpClient"
+            ) as fresh:
+                refresh.return_value = MagicMock(access_token="t", device_id="d")
+                fresh.return_value.post.return_value = {"ok": True}
+                assert make_offer("1", 40, confirm=True)["sent"] is True

@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from walla.account.login import ensure_access_token
+from walla.account.login import ensure_access_token, refresh_session
 from walla.account.offer_wire import build_offer_body
-from walla.core.exceptions import WallaUnsupportedError
+from walla.core.exceptions import WallaRateLimitError, WallaUnsupportedError
 from walla.http.client import HttpClient
 from walla.hunter.profile_store import load_profile
 from walla.hunter.verdict import haversine_km
@@ -119,11 +119,15 @@ def make_offer(
     http = client or _auth_client()
     body = build_offer_body(item_id, offer_eur)
     try:
-        raw = http.post(
-            "/api/v3/delivery/buyer/offers",
-            json_body=body,
-            auth=True,
-        )
+        try:
+            raw = http.post("/api/v3/delivery/buyer/offers", json_body=body, auth=True)
+        except Exception as first:
+            # The minted token can die before its assumed 240 s; re-mint once and retry.
+            if client is not None or "ACCESS_TOKEN_EXPIRED" not in str(first):
+                raise
+            sess = refresh_session()
+            http = HttpClient(access_token=sess.access_token, device_id=sess.device_id)
+            raw = http.post("/api/v3/delivery/buyer/offers", json_body=body, auth=True)
         return {
             "sent": True,
             "offer_id": body["offer_id"],
@@ -133,6 +137,12 @@ def make_offer(
         }
     except Exception as exc:
         msg = str(exc)
+        if "max offers per day" in msg.lower():
+            raise WallaRateLimitError(
+                "Wallapop daily offer limit reached (about 10 per day). "
+                "Try tomorrow, or put the price in chat: "
+                f'walla say {item_id} "… te propongo {offer_eur} € …" --yes'
+            ) from exc
         if "409" in msg or "offer creation not allowed" in msg.lower():
             raise WallaUnsupportedError(
                 "Seller disabled formal offers (409). "

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import base64
+import json
 import time
 from pathlib import Path
 from typing import Any, cast
@@ -142,8 +144,17 @@ def mint_access_token(session: SessionData) -> tuple[str, float]:
     for ck in resp.cookies.jar if hasattr(resp.cookies, "jar") else []:
         if getattr(ck, "name", None) == SESSION_COOKIE and ck.value:
             session.session_cookie = ck.value
-    exp = time.time() + 240
-    return str(token), exp
+    return str(token), _token_exp(str(token))
+
+
+def _token_exp(token: str) -> float:
+    """Expiry from the JWT exp claim; the session can hand back an already-aging token."""
+    try:
+        part = token.split(".")[1]
+        claims = json.loads(base64.urlsafe_b64decode(part + "=" * (-len(part) % 4)))
+        return float(claims["exp"])
+    except (IndexError, ValueError, KeyError, TypeError):
+        return time.time() + 240
 
 
 def refresh_session(session: SessionData | None = None) -> SessionData:

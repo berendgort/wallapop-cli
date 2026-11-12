@@ -167,3 +167,15 @@ def test_make_offer_daily_limit_and_token_retry(
                 refresh.return_value = MagicMock(access_token="t", device_id="d")
                 fresh.return_value.post.return_value = {"ok": True}
                 assert make_offer("1", 40, confirm=True)["sent"] is True
+
+
+def test_token_exp_reads_jwt_claim() -> None:
+    import base64
+    import json
+    import time
+
+    from walla.account.login import _token_exp
+
+    claims = base64.urlsafe_b64encode(json.dumps({"exp": 1234567890}).encode()).decode()
+    assert _token_exp(f"h.{claims.rstrip('=')}.s") == 1234567890
+    assert _token_exp("opaque") > time.time()

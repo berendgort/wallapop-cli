@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import getpass
+import shutil
+import subprocess
+import sys
 from typing import Any
 
 import typer
@@ -15,33 +18,10 @@ from walla.models.account import SessionData
 __all__ = ("interactive_login", "session_summary")
 
 _COOKIE_HOWTO = f"""
-How to get your Wallapop session cookie
-=======================================
-
-1. Open Chrome/Firefox and go to:
-     https://es.wallapop.com
-2. Log in with your Wallapop account (until you see your feed).
-3. Copy the cookie named exactly:
-     {SESSION_COOKIE}
-
-   Easiest (extension):
-     - Install "Cookie-Editor" from the Chrome/Firefox store
-     - Click the Cookie-Editor icon on es.wallapop.com
-     - Find {SESSION_COOKIE}
-     - Click Copy on its Value
-
-   Or DevTools (no extension):
-     - Press F12 -> Application (Chrome) or Storage (Firefox)
-     - Cookies -> https://es.wallapop.com
-     - Click {SESSION_COOKIE}
-     - Double-click the Value cell -> Ctrl+C / Cmd+C
-
-4. Easiest paste (avoids terminal truncation):
-     - In Cookie-Editor, Export -> save as cookies.txt
-     - Run:  walla login --cookies ~/Downloads/cookies.txt
-   Or paste ONLY the Value (starts with eyJ...), one line, Enter.
-   Cookie-Editor's name:"value" form is also OK.
-   Do NOT paste your password. Do NOT share this cookie in chat.
+Wallapop login
+  1. es.wallapop.com, logged in -> Cookie-Editor (or F12 -> Application -> Cookies)
+  2. Copy the Value of {SESSION_COOKIE}
+  3. Run walla login again, or paste below (hidden, Enter to finish)
 """.strip()
 
 
@@ -53,9 +33,12 @@ def interactive_login(*, password: bool = False) -> SessionData:
 
 
 def _prompt_cookie() -> SessionData:
-    typer.echo(_COOKIE_HOWTO)
-    typer.echo("")
-    raw = typer.prompt(f"Paste {SESSION_COOKIE} value (or cookies.txt path)").strip()
+    raw = _clipboard_cookie()
+    if raw:
+        typer.echo("Using the session cookie from your clipboard.")
+    else:
+        typer.echo(_COOKIE_HOWTO)
+        raw = _read_hidden("Cookie: ").strip()
     if not raw:
         raise WallaAuthError("empty paste - copy the cookie Value, not the name")
     return login_cookie_text(raw)
@@ -72,6 +55,43 @@ def _prompt_password() -> SessionData:
     except WallaAuthError:
         typer.echo("Password rejected. Falling back to cookie paste.")
         return _prompt_cookie()
+
+
+def _clipboard_cookie() -> str:
+    """Cookie text from the clipboard, or '' when it does not look like one."""
+    for cmd in (["wl-paste", "-n"], ["xclip", "-o", "-sel", "clip"], ["pbpaste"]):
+        if not shutil.which(cmd[0]):
+            continue
+        try:
+            text = subprocess.run(cmd, capture_output=True, text=True, timeout=3).stdout.strip()
+        except (OSError, subprocess.SubprocessError):
+            continue
+        if text.startswith("eyJ") or SESSION_COOKIE in text:
+            return text
+    return ""
+
+
+def _read_hidden(prompt: str) -> str:
+    """No-echo line read. getpass would cut at the 4096-char tty line limit; cookies are longer."""
+    if not sys.stdin.isatty():
+        return sys.stdin.readline()
+    import termios
+
+    fd = sys.stdin.fileno()
+    old = termios.tcgetattr(fd)
+    new = termios.tcgetattr(fd)
+    new[3] &= ~(termios.ECHO | termios.ICANON)
+    sys.stderr.write(prompt)
+    sys.stderr.flush()
+    chars: list[str] = []
+    try:
+        termios.tcsetattr(fd, termios.TCSADRAIN, new)
+        while (ch := sys.stdin.read(1)) not in ("\n", "\r", ""):
+            chars.append(ch)
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old)
+        sys.stderr.write("\n")
+    return "".join(chars)
 
 
 def session_summary(sess: SessionData) -> dict[str, Any]:

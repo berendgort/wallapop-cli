@@ -20,7 +20,7 @@ from walla.account.login import login_cookie_text, login_cookies, whoami
 from walla.account.prompt import interactive_login, session_summary
 from walla.account.session_store import clear_session, load_session
 from walla.cli.catch import run_cmd
-from walla.core.exceptions import WallaAuthError
+from walla.core.exceptions import WallaAuthError, WallaError
 from walla.hunter.negotiate import draft_negotiation
 from walla.hunter.profile_store import load_profile
 from walla.search.api import get_item
@@ -52,7 +52,13 @@ def register(app: typer.Typer) -> None:
                 )
             else:
                 sess = interactive_login(password=password)
-            return session_summary(sess)
+            out = session_summary(sess)
+            try:  # fill the account name so the user sees who they are
+                me = whoami()
+                out.update(user_id=me.get("user_id"), micro_name=me.get("micro_name"))
+            except WallaError:
+                pass
+            return out
 
         run_cmd(_run, as_json=json)
 

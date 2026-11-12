@@ -200,7 +200,7 @@ def ensure_access_token() -> SessionData:
     sess = load_session()
     if sess is None:
         raise WallaAuthError("No session. Run: walla login")
-    if sess.expires_at and sess.expires_at > time.time() + 30 and sess.access_token:
+    if sess.access_token and _token_exp(sess.access_token) > time.time() + 30:
         return sess
     return refresh_session(sess)
 

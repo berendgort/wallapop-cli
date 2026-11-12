@@ -79,6 +79,8 @@ Link listings as `https://es.wallapop.com/item/<web_slug>`. Verdicts:
    pipx install 'walla-cli[mcp]'
    ```
    From a clone only when hacking: `pipx install -e '.[mcp]'`.
+   `ModuleNotFoundError: No module named 'walla'` after a system Python upgrade
+   means the pipx venv still points at the old Python: `pipx reinstall walla-cli`.
 2. `walla doctor --json` — read `auth.session` and `network.reachable`.
    **Never** print tokens or cookies.
 3. If no session: ask the human to run `walla login` and paste

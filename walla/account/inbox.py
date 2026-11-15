@@ -23,15 +23,22 @@ def _auth_client() -> HttpClient:
 
 
 def list_conversations_raw(*, client: HttpClient | None = None) -> dict[str, Any]:
+    """Whole inbox: the BFF pages by `from` = previous `next_from` (one page hid older chats)."""
     http = client or _auth_client()
-    raw = http.get(
-        "/bff/messaging/inbox",
-        params={"page_size": 30, "max_messages": 30},
-        auth=True,
-    )
-    if not isinstance(raw, dict):
-        raise WallaUnsupportedError("Inbox BFF returned non-object.")
-    return raw
+    params: dict[str, Any] = {"page_size": 100, "max_messages": 30}
+    raw: dict[str, Any] = {}
+    rows: list[Any] = []
+    for _ in range(20):  # shortcut: 2000 conversations max, raise if an inbox ever grows past it
+        page = http.get("/bff/messaging/inbox", params=params, auth=True)
+        if not isinstance(page, dict):
+            raise WallaUnsupportedError("Inbox BFF returned non-object.")
+        raw = raw or page
+        batch = page.get("conversations") or []
+        rows.extend(batch)
+        if not batch or not page.get("next_from"):
+            break
+        params = {**params, "from": page["next_from"]}
+    return {**raw, "conversations": rows}
 
 
 def list_conversations(*, client: HttpClient | None = None) -> list[Conversation]:

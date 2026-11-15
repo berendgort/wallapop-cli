@@ -179,3 +179,23 @@ def test_token_exp_reads_jwt_claim() -> None:
     claims = base64.urlsafe_b64encode(json.dumps({"exp": 1234567890}).encode()).decode()
     assert _token_exp(f"h.{claims.rstrip('=')}.s") == 1234567890
     assert _token_exp("opaque") > time.time()
+
+
+def test_inbox_follows_next_from_pages() -> None:
+    from walla.account.inbox import list_conversations_raw
+
+    pages = [
+        {"next_from": "p2", "conversations": [{"hash": "a"}]},
+        {"next_from": None, "conversations": [{"hash": "b"}]},
+    ]
+    seen: list[dict[str, Any]] = []
+    client = MagicMock()
+
+    def fake_get(path: str, params: dict[str, Any], auth: bool) -> dict[str, Any]:
+        seen.append(dict(params))
+        return pages[len(seen) - 1]
+
+    client.get.side_effect = fake_get
+    raw = list_conversations_raw(client=client)
+    assert [c["hash"] for c in raw["conversations"]] == ["a", "b"]
+    assert "from" not in seen[0] and seen[1]["from"] == "p2"

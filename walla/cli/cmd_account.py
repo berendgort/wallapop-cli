@@ -21,6 +21,7 @@ from walla.account.prompt import interactive_login, session_summary
 from walla.account.session_store import clear_session, load_session
 from walla.cli.catch import run_cmd
 from walla.core.exceptions import WallaAuthError, WallaError
+from walla.core.tone import human
 from walla.hunter.negotiate import draft_negotiation
 from walla.hunter.profile_store import load_profile
 from walla.search.api import get_item
@@ -113,19 +114,24 @@ def register(app: typer.Typer) -> None:
         target: str = typer.Argument(..., help="Item id or conversation hash"),
         text: str = typer.Argument(...),
         yes: bool = typer.Option(False, "--yes"),
+        verbatim: bool = typer.Option(
+            False, "--verbatim", help="Send exactly as typed (skip the phone-style pass)"
+        ),
         json: bool = typer.Option(False, "--json"),
     ) -> None:
-        """Send chat text. Opens conversation first when given an item id."""
+        """Send chat text, phone style (one line, no ¡¿, lowercase start). Opens the chat first
+        when given an item id."""
+        msg = text if verbatim else human(text)
 
         def _run() -> dict[str, Any]:
             if not yes:
                 return {
                     "needs_confirm": True,
                     "target": target,
-                    "text": text,
+                    "text": msg,
                     "hint": "Re-run with --yes to send",
                 }
-            return send_message(target, text, confirm=True)
+            return send_message(target, msg, confirm=True)
 
         run_cmd(_run, as_json=json)
 

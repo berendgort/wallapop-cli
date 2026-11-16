@@ -39,7 +39,7 @@ def test_draft_opening_is_specific_and_polite() -> None:
     profile = Profile(lat=41.39, lon=2.17, km=30, pickup_km=30, budget=400)
     brief = draft_negotiation(_listing(), profile, seller_name="Ana")
     assert "Ana" in brief.opening
-    assert "¿Sigue disponible?" in brief.opening
+    assert "sigue disponible?" in brief.opening
     assert brief.needs_confirm is True
     assert brief.hitl == "approve_text_and_eur"
     blob = f"{brief.opening}\n{brief.offer_line}".lower()

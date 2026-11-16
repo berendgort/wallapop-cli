@@ -44,7 +44,7 @@ def test_first_contact_sends_when_still_open() -> None:
     move = next_move(_buy(status="open"), [])
     assert move.action == "send"
     assert "164" in move.text
-    assert "¿Sigue disponible?" in move.text
+    assert "sigue disponible?" in move.text
 
 
 def test_seller_price_inside_ceiling_converges() -> None:
@@ -180,7 +180,7 @@ def test_pursue_sends_once_and_desk_does_not_repeat(
     )
     first = run_pursue("kite")
     assert len(first["sent"]) == 1
-    assert "¿Sigue disponible?" in sent[0]
+    assert "sigue disponible?" in sent[0]
     again = run_pursue("kite")
     assert again["sent"] == []
     assert len(sent) == 1

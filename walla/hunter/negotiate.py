@@ -87,7 +87,7 @@ def draft_negotiation(
     walk = _walk_away(ask, profile)
     offer = _first_offer(ask, walk, profile.aggressiveness)
     specific = _specific_thing(listing)
-    greeting = f"Hola {seller_name}," if seller_name else "Hola,"
+    greeting = f"hola {seller_name}!" if seller_name else "hola!"
     opening, offer_line, you_give = _copy(greeting, specific, offer, _ships(listing))
     return NegotiationBrief(
         item_id=listing.id,
@@ -111,24 +111,16 @@ def _ships(listing: Listing) -> bool:
 
 
 def _copy(greeting: str, specific: str, offer: float, ships: bool) -> tuple[str, str, str]:
+    eur = _fmt_eur(offer)
     if ships:
-        opening = (
-            f"{greeting} me interesa tu {specific}. "
-            "¿Sigue disponible? Me iría bien envío Wallapop."
-        )
-        offer_line = (
-            f"Gracias. Por el estado y lo que hay ahora mismo, te propongo "
-            f"{_fmt_eur(offer)} € con envío Wallapop."
-        )
+        opening = f"{greeting} me interesa tu {specific}, sigue disponible?"
+        offer_line = f"te iria bien {eur}€ con envío?"
         return opening, offer_line, "Envío Wallapop, pago claro, trato respetuoso."
     opening = (
-        f"{greeting} me interesa tu {specific}. "
-        "¿Sigue disponible? Puedo pasar hoy si te va bien."
+        f"{greeting} me interesa tu {specific}, sigue disponible? "
+        "puedo pasar a verlo cuando te vaya bien"
     )
-    offer_line = (
-        f"Gracias. Por el estado y lo que hay ahora mismo, te propongo "
-        f"{_fmt_eur(offer)} € y lo recojo cuando te venga bien."
-    )
+    offer_line = f"te iria bien {eur}€? lo recojo cuando quieras"
     return opening, offer_line, "Recogida flexible, pago claro, trato respetuoso."
 
 

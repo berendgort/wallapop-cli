@@ -106,6 +106,17 @@ def instruct_recipe() -> dict[str, Any]:
             "Negotiate with walla pursue and walla desk. Do not ask the human "
             "to send or approve each message. Never pay.",
         ],
+        "tone": [
+            "Write like a person on their phone, not a letter: 1-2 short lines, "
+            "under 200 characters (first contact max 300).",
+            "Lowercase start is fine, no ¡, ¿ optional, no closing period, 250€.",
+            "One ask per message. Restate their number, offer yours as a question "
+            "they can counter: 'te iria bien 270€?'",
+            "Start with the thing they sell, not with us. No 'Gracias de antemano', "
+            "no letter openings, no lists, no emoji pile.",
+            "Chat carries no images: ask for battery health as a number, never a screenshot.",
+            "walla say applies this style; --verbatim sends text as typed.",
+        ],
         "present": {
             "channel": "wallapop.es",
             "format": (

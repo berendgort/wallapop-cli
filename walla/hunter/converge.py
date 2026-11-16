@@ -222,25 +222,22 @@ def _opening(pursuit: Pursuit) -> str:
     thing = " ".join(pursuit.title.split()[:6])[:60]
     eur = _fmt(pursuit.offer_eur)
     if pursuit.side == "sell":
-        return f"Hola, {thing} sigue disponible. Lo dejo en {eur} €."
-    return (
-        f"Hola, me interesa tu {thing}. ¿Sigue disponible? "
-        f"Te propongo {eur} €."
-    )
+        return f"hola! sigue disponible, te lo dejo en {eur}€"
+    return f"hola! me interesa tu {thing}, sigue disponible? te iria bien {eur}€?"
 
 
 def _nudge(pursuit: Pursuit) -> str:
     eur = _fmt(pursuit.offer_eur)
     if pursuit.side == "sell":
-        return f"Gracias por escribir. El precio es {eur} €. ¿Te encaja?"
-    return f"Gracias. ¿Te vendría bien {eur} €?"
+        return f"el precio es {eur}€, te encaja?"
+    return f"te iria bien {eur}€?"
 
 
 def _counter(pursuit: Pursuit, eur: float) -> str:
     n = _fmt(eur)
     if pursuit.side == "sell":
-        return f"Gracias. Te lo puedo dejar en {n} €. ¿Qué te parece?"
-    return f"Gracias por contestar. Puedo llegar a {n} €. ¿Te parece bien?"
+        return f"te lo puedo dejar en {n}€, que te parece?"
+    return f"puedo llegar a {n}€, te va bien?"
 
 
 def _fmt(n: float) -> str:
